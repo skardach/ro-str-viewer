@@ -1,7 +1,7 @@
-package com.skardach.ro.str;
-import com.skardach.ro.common.Color;
-import com.skardach.ro.common.Point;
-import com.skardach.ro.common.Rectangle;
+package com.skardach.ro.resource.str;
+import com.skardach.ro.graphics.Color;
+import com.skardach.ro.graphics.Point;
+import com.skardach.ro.graphics.Rectangle;
 
 /**
  * Describes Key frame of an effect animation

@@ -1,6 +1,6 @@
-package com.skardach.ro;
+package com.skardach.ro.resource;
 
-import com.skardach.ro.str.Texture;
+import com.skardach.ro.graphics.Texture;
 
 /**
  * Flyweight repository for loading textures.

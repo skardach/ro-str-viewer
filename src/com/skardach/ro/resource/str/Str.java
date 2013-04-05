@@ -1,4 +1,4 @@
-package com.skardach.ro.str;
+package com.skardach.ro.resource.str;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,17 +1,18 @@
-package com.skardach.ro.str;
+package com.skardach.ro.resource.str;
 
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import com.skardach.ro.ResourceException;
-import com.skardach.ro.ResourceManager;
-import com.skardach.ro.TextureManager;
-import com.skardach.ro.common.Color;
 import com.skardach.ro.common.LittleEndianInputStreamAdapter;
-import com.skardach.ro.common.Point;
-import com.skardach.ro.common.Rectangle;
+import com.skardach.ro.graphics.Color;
+import com.skardach.ro.graphics.Point;
+import com.skardach.ro.graphics.Rectangle;
+import com.skardach.ro.graphics.Texture;
+import com.skardach.ro.resource.ResourceException;
+import com.skardach.ro.resource.ResourceManager;
+import com.skardach.ro.resource.TextureManager;
 
 public class StrReader {
 

@@ -1,4 +1,4 @@
-package com.skardach.ro.common;
+package com.skardach.ro.graphics;
 
 public class Color {
 	float _r, _g, _b, _alpha;

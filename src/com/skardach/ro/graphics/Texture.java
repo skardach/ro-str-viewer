@@ -1,4 +1,4 @@
-package com.skardach.ro.str;
+package com.skardach.ro.graphics;
 
 /**
  * Class describing a texture.

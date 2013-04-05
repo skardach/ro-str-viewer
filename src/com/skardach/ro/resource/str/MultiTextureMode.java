@@ -1,4 +1,4 @@
-package com.skardach.ro.str;
+package com.skardach.ro.resource.str;
 
 /**
  * This should be refactored to an interface which provides texture manipulation

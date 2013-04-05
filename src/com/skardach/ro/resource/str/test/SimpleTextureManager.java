@@ -1,9 +1,9 @@
-package com.skardach.ro.str.test;
+package com.skardach.ro.resource.str.test;
 
 import java.util.HashMap;
 
-import com.skardach.ro.TextureManager;
-import com.skardach.ro.str.Texture;
+import com.skardach.ro.graphics.Texture;
+import com.skardach.ro.resource.TextureManager;
 
 public class SimpleTextureManager implements TextureManager {
 	HashMap<String, Texture> _textures = new HashMap<String, Texture>();

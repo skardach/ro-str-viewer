@@ -1,4 +1,4 @@
-package com.skardach.ro.str.test;
+package com.skardach.ro.resource.str.test;
 
 import static org.junit.Assert.*;
 
@@ -10,11 +10,11 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import com.skardach.ro.ResourceException;
-import com.skardach.ro.ResourceManager;
-import com.skardach.ro.str.Str;
-import com.skardach.ro.str.StrReader;
-import com.skardach.ro.str.StrReader.ParseException;
+import com.skardach.ro.resource.ResourceException;
+import com.skardach.ro.resource.ResourceManager;
+import com.skardach.ro.resource.str.Str;
+import com.skardach.ro.resource.str.StrReader;
+import com.skardach.ro.resource.str.StrReader.ParseException;
 
 public class STRReaderTest {
 

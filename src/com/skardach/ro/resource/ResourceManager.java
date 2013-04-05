@@ -1,4 +1,5 @@
-package com.skardach.ro;
+package com.skardach.ro.resource;
+
 
 /**
  * Repository for all the resources

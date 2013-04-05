@@ -1,7 +1,9 @@
-package com.skardach.ro.str;
+package com.skardach.ro.resource.str;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import com.skardach.ro.graphics.Texture;
 
 /**
  * Animation layer

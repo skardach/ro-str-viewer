@@ -1,4 +1,5 @@
-package com.skardach.ro.common;
+package com.skardach.ro.graphics;
+
 
 /**
  * Basic Rectangle class.
