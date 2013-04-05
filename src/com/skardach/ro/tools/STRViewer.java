@@ -4,30 +4,34 @@ import java.awt.FileDialog;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 
-import javax.media.opengl.GLCapabilities;
+
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import com.skardach.ro.graphics.STRRenderer;
+import com.skardach.ro.graphics.OpenGLWrapper;
+import com.skardach.ro.graphics.Renderer;
+import com.skardach.ro.graphics.STRRendererFactory;
 import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.ResourceManager;
 import com.skardach.ro.resource.str.Str;
 import com.skardach.ro.resource.str.StrReader;
 import com.skardach.ro.resource.str.StrReader.ParseException;
 import com.skardach.ro.resource.str.test.SimpleTextureManager;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 
 /**
  * Opens *.str file and tries to render it.
@@ -36,6 +40,8 @@ import javax.swing.JMenuItem;
  */
 public class STRViewer extends JFrame {
 	private static final long serialVersionUID = -9077621002191789823L;
+	// OpenGL settings wrapper
+	OpenGLWrapper _glWrapper;
 	// UI related
 	JTextArea _infoArea;
 	GLCanvas _canvas;
@@ -43,8 +49,8 @@ public class STRViewer extends JFrame {
 	// STR related
 	StrReader _reader = new StrReader();
 	ResourceManager _rm = new ResourceManager(new SimpleTextureManager());
-	STRRenderer _renderer;
-
+	Renderer _renderer;
+	
 	public static void main(String[] args) {
 		STRViewer viewer = new STRViewer();
 		viewer.start();
@@ -55,22 +61,19 @@ public class STRViewer extends JFrame {
 	}
 	
 	private void run() {
-		if(_renderer != null)
-		{
-			_renderer.renderFrame(this);
-		}
+		_glWrapper.startAnimation();
 	}
 
 	public STRViewer() {
 		setTitle("STRViewer");
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setSize(800, 600);
 		getContentPane().setLayout(new GridLayout(2, 1));
 		// TODO: Try with GL2ES1 -> that's the Android one, right?
-		GLProfile profile = GLProfile.getDefault();
-		GLCapabilities capabilities = new GLCapabilities(profile);
-		_canvas = new GLCanvas(capabilities);
+		_glWrapper = new OpenGLWrapper(GLProfile.getDefault());
+		_glWrapper.initOpenGL();
+		_canvas = _glWrapper.createGLCanvasWithAnimator();
 		add(_canvas);
+		// Add text area
 		_infoArea = new JTextArea();
 		_infoArea.setEditable(false);
 		JScrollPane p = new JScrollPane(_infoArea);
@@ -85,10 +88,17 @@ public class STRViewer extends JFrame {
 		JMenuItem mntmExit = new JMenuItem("Exit");
 		mnFile.add(mntmExit);
 		mntmExit.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				stop();
+			}
+		});
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				stop();
+				// FIXME: I'm making a shortcut here... proper cleaning needed
+				System.exit(0);
 			}
 		});
 	}
@@ -105,8 +115,10 @@ public class STRViewer extends JFrame {
 				{
 					// fill in the STR details
 					_infoArea.setText(effect.toString());
+					// Initialize OpenGL
 					// Prepare rendering objects
-					_renderer = new STRRenderer(effect);
+					_renderer = STRRendererFactory.createRenderer(effect);
+					_glWrapper.registerRendererOnCanvas(_renderer, _canvas);
 					// Display everything
 					setVisible(true);
 				}
@@ -138,6 +150,9 @@ public class STRViewer extends JFrame {
 	private void stop() {
 		setVisible(false);
 		dispose();
+		_glWrapper.stopAnimation();
+		_glWrapper.destroyCanvas(_canvas);
+		_glWrapper.finalizeOpenGL();
 	}
 
 	private File chooseFile() {
