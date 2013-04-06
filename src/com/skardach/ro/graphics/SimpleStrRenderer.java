@@ -4,22 +4,21 @@ import javax.media.opengl.GLAutoDrawable;
 
 import com.skardach.ro.resource.str.Str;
 
-public class SimpleRenderer implements Renderer {
+public class SimpleStrRenderer implements Renderer {
 	Str _effect;
 
-	public SimpleRenderer(Str iEffect) {
+	public SimpleStrRenderer(Str iEffect) {
 		_effect = iEffect;
 	}
 
 	@Override
 	public void renderFrame(GLAutoDrawable ioCanvas) {
-		// Read everything for STR object
-		// set up animator
 	}
 
 	@Override
 	public void initialize(GLAutoDrawable ioDrawable) {
 		System.out.println("Initializing Renderer...");
+		// Read everything for STR object
 	}
 
 	@Override

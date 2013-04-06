@@ -1,16 +1,27 @@
 package com.skardach.ro.graphics;
 
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
+import javax.media.opengl.glu.GLU;
 
 import com.jogamp.opengl.util.FPSAnimator;
 
 public class OpenGLWrapper {
+	// JOGL classes
 	GLProfile _profile;
 	FPSAnimator _animator;
+	GLU _glu = new GLU();
+	// Settings. TODO: This should be configurable
+	private static class Settings {
+		public static final float CLIPPING_NEAR = 1.0f;
+		public static final float CLIPPING_FAR  = 1.0f;
+		public static final float PERSPECTIVE_ANGLE = 45.0f;
+	}
 	
 	class RendererInvoker implements GLEventListener {
 		Renderer _renderer;
@@ -25,17 +36,56 @@ public class OpenGLWrapper {
 		@Override
 		public void dispose(GLAutoDrawable drawable) {
 			_renderer.dispose(drawable);
+			finalizeOpenGL(drawable);
 		}
 		@Override
 		public void init(GLAutoDrawable drawable) {
+			initOpenGL(drawable);
 			_renderer.initialize(drawable);
 		}
 		@Override
 		public void reshape(GLAutoDrawable drawable, int x, int y, int width,
 				int height) {
+			setPerspective(
+				drawable, 
+				Settings.PERSPECTIVE_ANGLE, 
+				Settings.CLIPPING_NEAR,
+				Settings.CLIPPING_FAR, 
+				width, 
+				height);
 			_renderer.handleReshape(drawable, x, y, width, height);
 		}
-		
+	}
+	
+	/**
+	 * Set viewing perspective on given drawable.
+	 * Required for STRViewer.
+	 * If reusing rendering code for particular renderers,
+	 * this should not be required.
+	 * @param ioDrawable target drawable
+	 * @param iAngle angle in degrees
+	 * @param iClipNear near clipping border (for frustum)
+	 * @param oClipFar far clipping border (for frustum)
+	 * @param iWidth width of the drawing field
+	 * @param iHeight height of the drawing field
+	 */
+	private void setPerspective(
+			GLAutoDrawable ioDrawable, 
+			float iAngle,
+			float iClipNear,
+			float oClipFar,
+			int iWidth,
+			int iHeight) {
+		GL2 gl = ioDrawable.getGL().getGL2();
+	    gl.glMatrixMode(GL2.GL_PROJECTION);
+	    gl.glLoadIdentity();
+	    float ratio = (float) iWidth / (float) iHeight;
+	    _glu.gluPerspective(
+    		iAngle,
+    		ratio,
+    		iClipNear,
+    		oClipFar);
+	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	}
 
 	public OpenGLWrapper(GLProfile iGraphicsProfile) {
@@ -69,17 +119,33 @@ public class OpenGLWrapper {
 	}
 	
 	/**
-	 * Initialize OpenGL. This should be done via separate method
-	 * in case we want to defer the initialization.
+	 * Initialize OpenGL in Canvas. Required for STRViewer.
+	 * If reusing rendering code for particular renderers,
+	 * this should not be required.
 	 */
-	public void initOpenGL() {
-		
+	private void initOpenGL(GLAutoDrawable ioCanvas) {
+		GL2 gl = ioCanvas.getGL().getGL2();
+	    gl.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
+	    gl.glEnable(GL.GL_TEXTURE_2D);
+	    gl.glShadeModel(GL2.GL_SMOOTH);
+	    gl.glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+	    gl.glClearDepth(1.0f);
+	    gl.glEnable(GL.GL_DEPTH_TEST);
+	    setPerspective(
+    		ioCanvas, 
+    		Settings.PERSPECTIVE_ANGLE,
+    		Settings.CLIPPING_NEAR,
+    		Settings.CLIPPING_FAR,
+    		ioCanvas.getWidth(), 
+    		ioCanvas.getHeight());
 	}
 
 	/**
-	 * Clean up after OpenGL
+	 * Clean up after OpenGL in canvas. Required for STRViewer.
+	 * If reusing rendering code for particular renderers,
+	 * this should not be required.
 	 */
-	public void finalizeOpenGL() {
+	private void finalizeOpenGL(GLAutoDrawable drawable) {
 	}
 
 	public void startAnimation() {

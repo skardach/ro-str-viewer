@@ -48,11 +48,6 @@ public class Str {
 		return _layers;
 	}
 	
-	public Str() {
-		_reserved = new byte[RESERVED_FIELD_SIZE];
-		_layers = new ArrayList<Layer>();
-	}
-	
 	@Override
 	public String toString() {
 		return toString("");
@@ -78,6 +73,6 @@ public class Str {
 	int _version;
 	int _frameCount;
 	int _fps;
-	byte _reserved[]; // should be 16 bytes
-	List<Layer> _layers;
+	byte _reserved[] = new byte[RESERVED_FIELD_SIZE];
+	List<Layer> _layers = new ArrayList<Layer>();
 }

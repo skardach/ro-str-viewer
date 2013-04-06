@@ -70,7 +70,6 @@ public class STRViewer extends JFrame {
 		getContentPane().setLayout(new GridLayout(2, 1));
 		// TODO: Try with GL2ES1 -> that's the Android one, right?
 		_glWrapper = new OpenGLWrapper(GLProfile.getDefault());
-		_glWrapper.initOpenGL();
 		_canvas = _glWrapper.createGLCanvasWithAnimator();
 		add(_canvas);
 		// Add text area
@@ -152,7 +151,6 @@ public class STRViewer extends JFrame {
 		dispose();
 		_glWrapper.stopAnimation();
 		_glWrapper.destroyCanvas(_canvas);
-		_glWrapper.finalizeOpenGL();
 	}
 
 	private File chooseFile() {
