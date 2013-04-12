@@ -25,9 +25,9 @@ public class STRReaderTest {
 		// 1. Empty stream: return null
 		try {
 			empty = new ByteArrayInputStream("".getBytes());
-			SimpleTextureManager stm = new SimpleTextureManager();
+			SimpleTextureManager stm = new SimpleTextureManager("");
 			ResourceManager rm = new ResourceManager(stm);
-			Str result = sut.readFromStream(empty, rm);
+			Str result = sut.readFromStream(rm, empty);
 			assertNull("Read STR from an empty stream.", result);
 		} catch (ParseException e) {
 			fail(e.getMessage());
@@ -49,10 +49,12 @@ public class STRReaderTest {
 		// 2. Correct: Read arrowstorm.str and check stuff
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream(new File("bin/com/skardach/ro/str/test/res/arrowstorm/arrowstorm.str"));
-			SimpleTextureManager stm = new SimpleTextureManager();
+			File f = new File("bin/com/skardach/ro/resource/str/test/res/arrowstorm/arrowstorm.str");
+			fis = new FileInputStream(f);
+			SimpleTextureManager stm = 
+				new SimpleTextureManager(f.getAbsolutePath());
 			ResourceManager rm = new ResourceManager(stm);
-			Str result = sut.readFromStream(fis, rm);
+			Str result = sut.readFromStream(rm, fis);
 			assertNotNull("Null returned...", result);
 			System.out.println(result.toString());
 		} catch (ParseException e) {

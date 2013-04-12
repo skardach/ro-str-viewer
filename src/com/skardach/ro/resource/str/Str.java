@@ -16,6 +16,7 @@ public class Str {
 	public static final int SUPPORTED_VERSION = 148;
 	public static final int DEFAULT_FPS = 60;
 	public static final int RESERVED_FIELD_SIZE = 16; // bytes
+	public static final int TEXTURE_NAME_SIZE = 128;
 	/*
 	 * Maximum count of things. Unlike in roint implementation,
 	 * I do now use malloc to reserve space so I'm not bound by

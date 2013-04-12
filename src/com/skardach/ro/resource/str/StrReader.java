@@ -1,17 +1,18 @@
 package com.skardach.ro.resource.str;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
 import com.skardach.ro.common.LittleEndianInputStreamAdapter;
 import com.skardach.ro.graphics.Color;
-import com.skardach.ro.graphics.Point;
+import com.skardach.ro.graphics.Point2D;
 import com.skardach.ro.graphics.Rectangle;
-import com.skardach.ro.graphics.Texture;
 import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.ResourceManager;
+import com.skardach.ro.resource.Texture;
 import com.skardach.ro.resource.TextureManager;
 
 public class StrReader {
@@ -25,7 +26,7 @@ public class StrReader {
 
 	}
 
-	public Str readFromStream(InputStream iStream, ResourceManager iResourceManager) throws ParseException, ResourceException {
+	public Str readFromStream(ResourceManager iResourceManager, InputStream iStream) throws ParseException, ResourceException {
 		if(iResourceManager == null)
 			throw new ResourceException("No resource manager available");
 		TextureManager textureManager = iResourceManager.getTextureManager();
@@ -78,23 +79,31 @@ public class StrReader {
 		if(textureCount > Layer.MAX_TEXTURE_COUNT)
 			throw new ParseException("Too many textures per layer: " + textureCount);
 		for(int t = 0; t < textureCount; t++)
+		{
 			layer.get_textures().add(readTexture(textureManager, stream));
+		}
 		int keyFrameCount = stream.readInt();
 		if(keyFrameCount > Layer.MAX_KEYFRAME_COUNT)
 			throw new ParseException("Too many key frames: " + keyFrameCount);
-		for(int kf = 0; kf < keyFrameCount; kf++)
+		for(int kf = 0; kf < keyFrameCount; kf++) {
 			layer.get_keyFrames().add(readKeyFrame(stream));
+		}
 		return layer;
 	}
 
 	private Texture readTexture(TextureManager textureManager,
 			LittleEndianInputStreamAdapter stream) throws IOException, ResourceException {
-		byte textureNameBuffer[] = new byte[Texture.NAME_SIZE];
+		byte textureNameBuffer[] = new byte[Str.TEXTURE_NAME_SIZE];
 		stream.read(textureNameBuffer);
-		String textureName = new String(textureNameBuffer, 0, Texture.NAME_SIZE).trim(); // this should use UTF8
-		Texture texture = textureManager.getTexture(textureName);
+		String textureName = // this should use UTF8
+			new String(textureNameBuffer, 0, Str.TEXTURE_NAME_SIZE).trim();
+		Texture texture = 
+			textureManager.getTexture(textureName);
 		if(texture == null) // if no such texture found
-			throw new ResourceException(String.format("Texture [%s] could not be located", textureName));
+			throw new ResourceException(
+				String.format(
+					"Texture [%s] could not be located",
+					textureName));
 		return texture;
 	}
 
@@ -104,15 +113,27 @@ public class StrReader {
 		keyFrame.set_frameType(KeyFrameType.fromInt(stream.readInt()));
 		float x = stream.readFloat();
 		float y = stream.readFloat();
-		keyFrame.set_position(new Point(x, y)); // TODO: Lightweight for points?
-		keyFrame.set_u(stream.readFloat());
-		keyFrame.set_v(stream.readFloat());
-		keyFrame.set_us(stream.readFloat());
-		keyFrame.set_vs(stream.readFloat());
-		keyFrame.set_u2(stream.readFloat());
-		keyFrame.set_v2(stream.readFloat());
-		keyFrame.set_us2(stream.readFloat());
-		keyFrame.set_vs2(stream.readFloat());
+		keyFrame.set_position(new Point2D(x, y));
+		float u = stream.readFloat();
+		float v = stream.readFloat();
+		float us = stream.readFloat();
+		float vs = stream.readFloat();
+		keyFrame.set_textureUVMapping(
+			new Rectangle<Point2D>(
+				new Point2D(u, v),
+				new Point2D(u+us,v),
+				new Point2D(u,v+vs),
+				new Point2D(u+us,v+vs)));
+		u = stream.readFloat();
+		v = stream.readFloat();
+		us = stream.readFloat();
+		vs = stream.readFloat();
+		keyFrame.set_textureUVMapping2(
+			new Rectangle<Point2D>(
+				new Point2D(u, v),
+				new Point2D(u+us,v),
+				new Point2D(u,v+vs),
+				new Point2D(u+us,v+vs)));
 		// Rectangle corners' coordinates
 		// x coordinates first
 		float ax = stream.readFloat();
@@ -124,13 +145,13 @@ public class StrReader {
 		float by = stream.readFloat();
 		float cy = stream.readFloat();
 		float dy = stream.readFloat();
-		keyFrame.set_rectangle(
-			new Rectangle(
-				new Point(ax, ay), 
-				new Point(bx, by), 
-				new Point(cx, cy), 
-				new Point(dx, dy)));
-		keyFrame.set_animationFrame(stream.readFloat());
+		keyFrame.set_drawingRectangle(
+			new Rectangle<Point2D>(
+				new Point2D(ax, ay), 
+				new Point2D(bx, by), 
+				new Point2D(cx, cy), 
+				new Point2D(dx, dy)));
+		keyFrame.set_textureId(stream.readFloat());
 		keyFrame.set_animationType(AnimationType.fromInt(stream.readInt()));
 		keyFrame.set_animationDelta(stream.readFloat());
 		keyFrame.set_rotation(stream.readFloat());

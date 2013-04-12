@@ -1,7 +1,7 @@
 package com.skardach.ro.graphics;
 
 public class Color {
-	float _r, _g, _b, _alpha;
+	public float _r, _g, _b, _alpha;
 	
 	public Color(float iR, float iG, float iB, float iAlpha) {
 		_r = iR;
@@ -9,6 +9,14 @@ public class Color {
 		_b = iB;
 		_alpha = iAlpha;
 	}
+	
+	public Color(Color iOther) {
+		_r = iOther._r;
+		_g = iOther._g;
+		_b = iOther._b;
+		_alpha = iOther._alpha;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("[%fR,%fG,%fB,%fA]", _r, _g, _b, _alpha);

@@ -1,6 +1,6 @@
 package com.skardach.ro.resource.str;
 import com.skardach.ro.graphics.Color;
-import com.skardach.ro.graphics.Point;
+import com.skardach.ro.graphics.Point2D;
 import com.skardach.ro.graphics.Rectangle;
 
 /**
@@ -10,23 +10,38 @@ import com.skardach.ro.graphics.Rectangle;
 public class KeyFrame {
 	int _framenum;
 	KeyFrameType _frameType; // subclass maybe? Take a look at roengine processing 
-	Point _position;
-	float _u; // Vector 1?
-	float _v;
-	float _us;
-	float _vs; // Vector 1 end?
-	float _u2; // Vector 2?
-	float _v2;
-	float _us2;
-	float _vs2; // Vector 2 end?
-	Rectangle _rectangle;
-	float _animationFrame;
+	Point2D _position;
+	/**
+	 * Texture mapping.
+	 * Vertices go like this:
+	 * a--b
+	 * |  |
+	 * c--d
+	 */
+	Rectangle<Point2D> _textureUVMapping;
+	/**
+	 * Second texture mapping. Not sure yet what's it for...
+	 * Vertices go like this:
+	 * a--b
+	 * |  |
+	 * c--d
+	 */
+	Rectangle<Point2D> _textureUVMapping2;
+	/**
+	 * Drawing rectangle for OpenGL.
+	 * Vertices go like this:
+	 * d--c
+	 * |  |
+	 * a--b
+	 */
+	Rectangle<Point2D> _drawingRectangle;
+	float _textureId;
     AnimationType _animationType;
     float _animationDelta; ///< Texture animation delta.
     float _rotation; //< Rotation [0,1024[ is equivalent to [0,360[ degrees
     Color _color;
-    int _sourceAlpha; //< Source blend mode (D3DBLEND_*)
-    int _destAlpha; //< Destination blend mode (D3DBLEND_*)
+    int _sourceBlend; //< Source blend mode
+    int _destBlend; //< Destination blend mode
     MultiTextureMode _multiTexturePreset;
     
 	public final int get_framenum() {
@@ -35,38 +50,20 @@ public class KeyFrame {
 	public final KeyFrameType get_frameType() {
 		return _frameType;
 	}
-	public final Point get_position() {
+	public final Point2D get_position() {
 		return _position;
 	}
-	public final float get_u() {
-		return _u;
+	public final Rectangle<Point2D> get_textureUVMapping() {
+		return _textureUVMapping;
 	}
-	public final float get_v() {
-		return _v;
+	public final Rectangle<Point2D> get_textureUVMapping2() {
+		return _textureUVMapping2;
 	}
-	public final float get_us() {
-		return _us;
+	public final Rectangle<Point2D> get_drawingRectangle() {
+		return _drawingRectangle;
 	}
-	public final float get_vs() {
-		return _vs;
-	}
-	public final float get_u2() {
-		return _u2;
-	}
-	public final float get_v2() {
-		return _v2;
-	}
-	public final float get_us2() {
-		return _us2;
-	}
-	public final float get_vs2() {
-		return _vs2;
-	}
-	public final Rectangle get_rectangle() {
-		return _rectangle;
-	}
-	public final float get_animationFrame() {
-		return _animationFrame;
+	public final float get_textureId() {
+		return _textureId;
 	}
 	public final AnimationType get_animationType() {
 		return _animationType;
@@ -80,11 +77,11 @@ public class KeyFrame {
 	public final Color get_color() {
 		return _color;
 	}
-	public final int get_sourceAlpha() {
-		return _sourceAlpha;
+	public final int get_sourceBlend() {
+		return _sourceBlend;
 	}
-	public final int get_destAlpha() {
-		return _destAlpha;
+	public final int get_destBlend() {
+		return _destBlend;
 	}
 	public final MultiTextureMode get_multiTexturePreset() {
 		return _multiTexturePreset;
@@ -95,38 +92,22 @@ public class KeyFrame {
 	public final void set_frameType(KeyFrameType _frameType) {
 		this._frameType = _frameType;
 	}
-	public final void set_position(Point _position) {
+	public final void set_position(Point2D _position) {
 		this._position = _position;
 	}
-	public final void set_u(float _u) {
-		this._u = _u;
+	public final void set_textureUVMapping(Rectangle<Point2D> iMapping) {
+		assert(iMapping != null);
+		this._textureUVMapping = iMapping;
 	}
-	public final void set_v(float _v) {
-		this._v = _v;
+	public final void set_textureUVMapping2(Rectangle<Point2D> iMapping) {
+		assert(iMapping != null);
+		this._textureUVMapping2 = iMapping;
 	}
-	public final void set_us(float _us) {
-		this._us = _us;
+	public final void set_drawingRectangle(Rectangle<Point2D> _rectangle) {
+		this._drawingRectangle = _rectangle;
 	}
-	public final void set_vs(float _vs) {
-		this._vs = _vs;
-	}
-	public final void set_u2(float _u2) {
-		this._u2 = _u2;
-	}
-	public final void set_v2(float _v2) {
-		this._v2 = _v2;
-	}
-	public final void set_us2(float _us2) {
-		this._us2 = _us2;
-	}
-	public final void set_vs2(float _vs2) {
-		this._vs2 = _vs2;
-	}
-	public final void set_rectangle(Rectangle _rectangle) {
-		this._rectangle = _rectangle;
-	}
-	public final void set_animationFrame(float _animationFrame) {
-		this._animationFrame = _animationFrame;
+	public final void set_textureId(float _textureId) {
+		this._textureId = _textureId;
 	}
 	public final void set_animationType(AnimationType _animationType) {
 		this._animationType = _animationType;
@@ -141,10 +122,10 @@ public class KeyFrame {
 		this._color = _color;
 	}
 	public final void set_sourceAlpha(int _sourceAlpha) {
-		this._sourceAlpha = _sourceAlpha;
+		this._sourceBlend = _sourceAlpha;
 	}
 	public final void set_destAlpha(int _destAlpha) {
-		this._destAlpha = _destAlpha;
+		this._destBlend = _destAlpha;
 	}
 	public final void set_multiTexturePreset(MultiTextureMode _multiTexturePreset) {
 		this._multiTexturePreset = _multiTexturePreset;
@@ -160,22 +141,16 @@ public class KeyFrame {
 			iPrefix + "  _framenum=" + _framenum + ",\n"+
 			iPrefix + "  _frameType=" + _frameType + ",\n"+
 			iPrefix + "  _position=" + _position + ",\n"+
-			iPrefix + "  _u=" + _u + ",\n"+
-			iPrefix + "  _v=" + _v + ",\n"+
-			iPrefix + "  _us=" + _us + ",\n"+
-			iPrefix + "  _vs=" + _vs + ",\n"+
-			iPrefix + "  _u2=" + _u2 + ",\n"+
-			iPrefix + "  _v2=" + _v2 + ",\n"+
-			iPrefix + "  _us2=" + _us2 + ",\n"+
-			iPrefix + "  _vs2=" + _vs2 + ",\n"+
-			iPrefix + "  _rectangle=" + _rectangle + ",\n"+
-			iPrefix + "  _animationFrame=" + _animationFrame + ",\n"+
+			iPrefix + "  _textureUVMapping=" + _textureUVMapping + ",\n"+
+			iPrefix + "  _textureUVMapping2=" + _textureUVMapping2 + ",\n"+
+			iPrefix + "  _drawingRectangle=" + _drawingRectangle + ",\n"+
+			iPrefix + "  _textureId=" + _textureId + ",\n"+
 			iPrefix + "  _animationType=" + _animationType + ",\n"+
 			iPrefix + "  _animationDelta=" + _animationDelta + ",\n"+
 			iPrefix + "  _rotation=" + _rotation + ",\n"+
 			iPrefix + "  _color=" + _color + ",\n"+
-			iPrefix + "  _sourceAlpha=" + _sourceAlpha + ",\n"+
-			iPrefix + "  _destAlpha=" + _destAlpha + ",\n"+
+			iPrefix + "  _sourceBlend=" + _sourceBlend + ",\n"+
+			iPrefix + "  _destBlend=" + _destBlend + ",\n"+
 			iPrefix + "  _multiTexturePreset=" + _multiTexturePreset + "\n"+
 			iPrefix + "]";
 	}

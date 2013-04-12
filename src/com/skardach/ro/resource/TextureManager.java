@@ -1,6 +1,5 @@
 package com.skardach.ro.resource;
 
-import com.skardach.ro.graphics.Texture;
 
 /**
  * Flyweight repository for loading textures.
@@ -16,5 +15,4 @@ public interface TextureManager {
 	 * @return Texture object.
 	 */
 	Texture getTexture(String textureName);
-
 }

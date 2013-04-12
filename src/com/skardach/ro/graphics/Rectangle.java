@@ -6,25 +6,25 @@ package com.skardach.ro.graphics;
  * @author Stanislaw Kardach
  *
  */
-public class Rectangle {
-	Point _a, _b, _c, _d;
+public class Rectangle<TPoint> {
+	TPoint _a, _b, _c, _d;
 
-	public Rectangle(Point iA, Point iB, Point iC, Point iD) {
+	public Rectangle(TPoint iA, TPoint iB, TPoint iC, TPoint iD) {
 		_a = iA;
 		_b = iB;
 		_c = iC;
 		_d = iD;
 	}
-	public final Point get_a() {
+	public final TPoint get_a() {
 		return _a;
 	}
-	public final Point get_b() {
+	public final TPoint get_b() {
 		return _b;
 	}
-	public final Point get_c() {
+	public final TPoint get_c() {
 		return _c;
 	}
-	public final Point get_d() {
+	public final TPoint get_d() {
 		return _d;
 	}
 	
