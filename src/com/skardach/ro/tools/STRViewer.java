@@ -105,8 +105,8 @@ public class STRViewer extends JFrame {
 
 	private void start() {
 		// Choose STR
-		//File strFile = chooseFile();
-		File strFile = new File("/home/kardasan/dev/eclipse/ro-str_viewer/src/com/skardach/ro/resource/str/test/res/arrowstorm/stormgust.str");
+		File strFile = chooseFile();
+		//File strFile = new File("/home/kardasan/dev/eclipse/ro-str_viewer/src/com/skardach/ro/resource/str/test/res/arrowstorm/stormgust.str");
 		//File strFile = new File("/home/kardasan/dev/eclipse/ro-str_viewer/src/com/skardach/ro/resource/str/test/res/arrowstorm/arrowstorm.str");
 		if(strFile != null) {
 			try {
