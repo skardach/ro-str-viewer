@@ -1,7 +1,5 @@
 package com.skardach.ro.resource.str;
 
-
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -14,9 +12,17 @@ import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.ResourceManager;
 import com.skardach.ro.resource.Texture;
 import com.skardach.ro.resource.TextureManager;
-
+/**
+ * Class for reading STR files from stream.
+ * @author Stanislaw Kardach
+ *
+ */
 public class StrReader {
-
+	/**
+	 * Thrown if parsing fails for some reason
+	 * @author Stanislaw Kardach
+	 *
+	 */
 	public class ParseException extends Exception {
 		private static final long serialVersionUID = 7050197797878645891L;
 
@@ -25,7 +31,17 @@ public class StrReader {
 		}
 
 	}
-
+	/**
+	 * Read STR file from stream using given resource manager for fetching
+	 * textures.
+	 * @param iResourceManager
+	 * @param iStream
+	 * @return Object representing STR file.
+	 * @throws ParseException In case of syntax errors in the stream.
+	 * @throws ResourceException Thrown when texture manager is unable to
+	 * locate texture specified in the STR file or passed ResourceManager is
+	 * null.
+	 */
 	public Str readFromStream(ResourceManager iResourceManager, InputStream iStream) throws ParseException, ResourceException {
 		if(iResourceManager == null)
 			throw new ResourceException("No resource manager available");
@@ -70,7 +86,16 @@ public class StrReader {
 		}
 		return result;
 	}
-
+	/**
+	 * Read a single layer from the stream.
+	 * @param textureManager
+	 * @param stream Input stream containing the layer. It is assumed that the
+	 * stream is set on the beginning of the layer data.
+	 * @return Object representing a layer of effect file.
+	 * @throws IOException Read error on the stream
+	 * @throws ParseException Syntax error.
+	 * @throws ResourceException Problems with loading textures.
+	 */
 	private Layer readLayer(TextureManager textureManager,
 			LittleEndianInputStreamAdapter stream) throws IOException, ParseException,
 			ResourceException {
@@ -90,7 +115,14 @@ public class StrReader {
 		}
 		return layer;
 	}
-
+	/**
+	 * Read texture data and try to obtain it via texture manager.
+	 * @param textureManager Texture manager to use
+	 * @param stream Stream to read texture data from
+	 * @return Texture object
+	 * @throws IOException Stream read error.
+	 * @throws ResourceException Texture could not be opened/located. 
+	 */
 	private Texture readTexture(TextureManager textureManager,
 			LittleEndianInputStreamAdapter stream) throws IOException, ResourceException {
 		byte textureNameBuffer[] = new byte[Str.TEXTURE_NAME_SIZE];
@@ -106,7 +138,12 @@ public class StrReader {
 					textureName));
 		return texture;
 	}
-
+	/**
+	 * Read key frame description from stream.
+	 * @param stream Input stream to read data from/
+	 * @return Object describing a key frame
+	 * @throws IOException Read errors on the stream.
+	 */
 	private KeyFrame readKeyFrame(LittleEndianInputStreamAdapter stream) throws IOException {
 		KeyFrame keyFrame = new KeyFrame();
 		keyFrame.set_framenum(stream.readInt());

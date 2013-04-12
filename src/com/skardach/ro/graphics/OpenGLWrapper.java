@@ -15,13 +15,17 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
 
 import com.jogamp.opengl.util.FPSAnimator;
-
+/**
+ * OpenGL wrapper class which is used in business logic to separate it from the
+ * rendering logic.
+ * @author Stanislaw Kardach
+ *
+ */
 public class OpenGLWrapper {
 	// JOGL classes
 	GLProfile _profile;
 	FPSAnimator _animator;
 	GLU _glu;
-
 	// Settings. TODO: This should be configurable
 	private static class Settings {
 		public static final float CLIPPING_NEAR = 1.0f;
@@ -29,7 +33,13 @@ public class OpenGLWrapper {
 		public static final float PERSPECTIVE_ANGLE = 45.0f;
 		public static final int ANIMATOR_FPS = 90;
 	}
-
+	/**
+	 * Used in JOGL drawing event calls. Calls renderer callbacks and performs
+	 * some scene setup. There is also a very crude support for scene navigation
+	 * but it's buggy as hell right now.
+	 * @author Stanislaw Kardach
+	 *
+	 */
 	class RendererHandler implements GLEventListener, KeyListener {
 		Renderer _renderer;
 		long _displayInvokeDelay = 0;
@@ -47,6 +57,7 @@ public class OpenGLWrapper {
 		}
 		@Override
 		public void display(GLAutoDrawable drawable) {
+			drawable.getGL().glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 			setPerspective(
 					drawable, 
 					Settings.PERSPECTIVE_ANGLE, 
@@ -60,7 +71,6 @@ public class OpenGLWrapper {
 					_centerX,
 					_centerY,
 					_centerZ);
-			drawable.getGL().glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 			drawAxis(drawable);
 			long last = _lastDisplayInvoke;
 			_lastDisplayInvoke = System.nanoTime()/1000000; // get millisecond
@@ -89,10 +99,10 @@ public class OpenGLWrapper {
 			_renderer.handleReshape(drawable, x, y, width, height);
 		}
 		@Override
-		public void keyTyped(KeyEvent e) {
-		}
+		public void keyTyped(KeyEvent e) {}
 
 		/**
+		 * Calculates angle from two sides of a right triangle.
 		 * @param iX
 		 * @param iY
 		 * @return
@@ -104,6 +114,10 @@ public class OpenGLWrapper {
 			currentAngle = Math.atan((double)iX/(double)iY);
 			return currentAngle;
 		}
+		/**
+		 * This should move the eye of the camera based on the key pressed.
+		 * It does so up to a certain extent... needs fixing.
+		 */
 		@Override
 		public void keyPressed(KeyEvent e) {
 			// TODO: this is VERY crude...
@@ -134,15 +148,10 @@ public class OpenGLWrapper {
 				_eyeY = (int)(Math.cos(currentAngle+deltaAngle)*r);
 				break;
 			}
-			
 		}
 		@Override
-		public void keyReleased(KeyEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
+		public void keyReleased(KeyEvent e) {}
 	}
-	
 	/**
 	 * Set viewing perspective on given drawable.
 	 * Required for STRViewer.
@@ -190,7 +199,6 @@ public class OpenGLWrapper {
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
 	}
-
 	public OpenGLWrapper(GLProfile iGraphicsProfile) {
 		if(iGraphicsProfile != null)
 			_profile = iGraphicsProfile;
@@ -198,7 +206,6 @@ public class OpenGLWrapper {
 			_profile = GLProfile.getDefault();
 		_animator = new FPSAnimator(Settings.ANIMATOR_FPS);
 	}
-
 	/**
 	 * Creates a GLCanvas and attaches it to the internal animator
 	 * @return canvas ready to draw on and with animator.
@@ -211,7 +218,6 @@ public class OpenGLWrapper {
 		_animator.add(result);
 		return result;
 	}
-
 	/**
 	 * Performs destruction of a canvas and removes it from
 	 * animator list.
@@ -221,7 +227,6 @@ public class OpenGLWrapper {
 		_animator.remove(ioCanvas);
 		ioCanvas.destroy();
 	}
-	
 	/**
 	 * Initialize OpenGL in Canvas. Required for STRViewer.
 	 * If reusing rendering code for particular renderers,
@@ -239,7 +244,6 @@ public class OpenGLWrapper {
 	    gl.glClearDepth(1.0f);
 	    gl.glEnable(GL.GL_DEPTH_TEST);
 	}
-
 	/**
 	 * Clean up after OpenGL in canvas. Required for STRViewer.
 	 * If reusing rendering code for particular renderers,
@@ -247,15 +251,26 @@ public class OpenGLWrapper {
 	 */
 	private void finalizeOpenGL(GLAutoDrawable drawable) {
 	}
-
+	/**
+	 * Fire up the animator.
+	 */
 	public void startAnimation() {
 		_animator.start();
 	}
-
+	/**
+	 * Stop the animator.
+	 */
 	public void stopAnimation() {
 		_animator.stop();
 	}
-
+	/**
+	 * Add given renderer to the rendering pipeline on a given canvas. 
+	 * TODO: Key listener could be done differently since multiple 
+	 * {@link RendererHandler} will make a mayhem trying to change the
+	 * viewpoint.
+	 * @param iRenderer 
+	 * @param ioCanvas
+	 */
 	public void registerRendererOnCanvas(
 			Renderer iRenderer, 
 			GLCanvas ioCanvas) {
@@ -265,14 +280,15 @@ public class OpenGLWrapper {
 			ioCanvas.addKeyListener(rh);
 		}
 	}
-
 	/**
+	 * Draws axis to have some reference for the view. 
 	 * @param drawable
-	 * @throws GLException
 	 */
-	public void drawAxis(GLAutoDrawable drawable) throws GLException {
+	public void drawAxis(GLAutoDrawable drawable) {
 		GL2 gl = drawable.getGL().getGL2();
 		// save environment
+		gl.glPushMatrix();
+		gl.glLoadIdentity();
 		float currentcolor[] = new float[4];
 		gl.glGetFloatv(GL2.GL_CURRENT_COLOR, currentcolor, 0);
 		// draw axis
@@ -298,12 +314,18 @@ public class OpenGLWrapper {
 			currentcolor[1],
 			currentcolor[2],
 			currentcolor[3]);
+		gl.glPopMatrix();
 	}
-
+	/**
+	 * Create wrapper with a desktop profile.
+	 */
 	public static OpenGLWrapper createDesktopWrapper() {
 		return new OpenGLWrapper(GLProfile.get(GLProfile.GL2));
 	}
-	
+	/**
+	 * Create wrapper with mobile profile
+	 * @return
+	 */
 	public static OpenGLWrapper createMobileWrapper() {
 		return new OpenGLWrapper(GLProfile.getGL2ES1());
 	}

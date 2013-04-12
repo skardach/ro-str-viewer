@@ -1,6 +1,5 @@
 package com.skardach.ro.graphics;
 
-
 /**
  * Basic Rectangle class.
  * @author Stanislaw Kardach

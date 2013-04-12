@@ -1,5 +1,11 @@
 package com.skardach.ro.resource.str;
 
+/**
+ * Describes key frame type. Can be either basic frame or animation (morph)
+ * frame.
+ * @author Stanislaw Kardach
+ *
+ */
 public enum KeyFrameType {
 	BASIC,
 	MORPH;

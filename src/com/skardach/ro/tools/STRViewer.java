@@ -123,7 +123,7 @@ public class STRViewer extends JFrame {
 					// Initialize OpenGL
 					// Prepare rendering objects
 					_renderer = 
-						STRRendererFactory.createRenderer(
+						STRRendererFactory.createEffectRenderer(
 							effect, 
 							Settings.EFFECT_POSITION,
 							Settings.EFFECT_ROTATION_X,

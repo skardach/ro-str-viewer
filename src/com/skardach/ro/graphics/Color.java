@@ -1,5 +1,9 @@
 package com.skardach.ro.graphics;
-
+/**
+ * Little helper class for encapsulating RGBA color definition
+ * @author Stanislaw Kardach
+ *
+ */
 public class Color {
 	public float _r, _g, _b, _alpha;
 	

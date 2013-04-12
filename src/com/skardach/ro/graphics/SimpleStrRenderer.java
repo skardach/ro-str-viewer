@@ -14,6 +14,13 @@ import com.skardach.ro.resource.str.KeyFrameType;
 import com.skardach.ro.resource.str.Layer;
 import com.skardach.ro.resource.str.Str;
 
+/**
+ * Simple implementation of rendering STR files. Most of the credit goes to
+ * open-ragnarok project whose implementation of rendering was a guideline to
+ * this one.
+ * @author kardasan
+ *
+ */
 public class SimpleStrRenderer implements Renderer {
 	private static final float STR_ANGLE_TO_DEGREES = 2.8444f;
 	private static final int NO_FRAME = -1;
@@ -85,7 +92,9 @@ public class SimpleStrRenderer implements Renderer {
 		_yScale = iYScale;
 		_zScale = iZScale;
 	}
-
+	/**
+	 * Render a single frame. Preserves current matrix from being overwritten. 
+	 */
 	@Override
 	public void renderFrame(
 			GLAutoDrawable ioCanvas,
@@ -95,12 +104,23 @@ public class SimpleStrRenderer implements Renderer {
 		render(gl, iDelaySinceLastInvoke);
 		afterRender(gl);
 	}
-
+	/**
+	 * Restore original matrix.
+	 * @param iGL GL context
+	 */
 	private void afterRender(GL2 iGL) {
 		iGL.glDisable(GL.GL_TEXTURE_2D);
 		iGL.glPopMatrix();
 	}
-
+	/**
+	 * Main rendering method. Iterates through each layer and renders it.
+	 * @param iGL
+	 * @param iDelaySinceLastInvoke Time (in ms) since this method was last
+	 * invoked. Required for calculating animation deltas and potential new
+	 * key frames to apply
+	 * @throws RenderException If something goes wrong with rendering (GL
+	 * error, improper texture, etc.).
+	 */
 	private void render(
 			GL2 iGL, 
 			long iDelaySinceLastInvoke) throws RenderException {
@@ -120,7 +140,6 @@ public class SimpleStrRenderer implements Renderer {
 		}
 		_lastRenderedFrame = frameToRender;
 	}
-
 	/**
 	 * Calculate which frame to render next. FPS in the effect files are crap
 	 * so assume 30 FPS as the original client.
@@ -146,7 +165,18 @@ public class SimpleStrRenderer implements Renderer {
 		}
 		return frameToRender;
 	}
-	
+	/**
+	 * Render a single layer. Texture and location data are taken from a current
+	 * base key frame and then a current animation frame transformations are
+	 * applied (given that animation frame has been reached).
+	 * @param iLayerNumber Layer number in the effect stack (decides ordering
+	 * on Z axis)
+	 * @param iLayer layer object
+	 * @param iFrameToRender which frame should be rendered (used to calculate
+	 * current base and animation frames to use).
+	 * @param iGL GL context
+	 * @throws RenderException If anything goes wrong with rendering.
+	 */
 	private void renderLayer(
 			int iLayerNumber, 
 			Layer iLayer, 
@@ -196,10 +226,9 @@ public class SimpleStrRenderer implements Renderer {
 							finalColor, finalPosition, finalRotation,
 							finalRectangle, finalTextureMapping);
 				}
-				
 				iGL.glPushMatrix();
-				
-				Billboard(iGL);
+				// TODO: Is this needed?
+				//Billboard(iGL);
 
 				iGL.glColor4ub(
 					(byte)finalColor._r, 
@@ -280,7 +309,10 @@ public class SimpleStrRenderer implements Renderer {
 			}
 		}
 	}
-
+	/**
+	 * Make the effect face us.
+	 * @param iGL GL context
+	 */
 	private void Billboard(GL2 iGL) {
 		// Cheat Cylindrical. Credits: 
 		// http://www.lighthouse3d.com/opengl/billboarding/index.php3?billCheat1
@@ -304,15 +336,17 @@ public class SimpleStrRenderer implements Renderer {
 		    }
 		iGL.glLoadMatrixf(modelview,0);
 	}
-
 	/**
-	 * @param iAnimationFrame
-	 * @param iFrameToRender
-	 * @param ioFinalColor
-	 * @param ioFinalPosition
-	 * @param ioFinalRotation
-	 * @param ioFinalRectangle
-	 * @param ioFinalTextureMapping
+	 * Applies animation frame modifications unto given set of drawing
+	 * parameters.
+	 * @param iAnimationFrame Animation frame to apply
+	 * @param iFrameToRender current rendered frame (used to calculate
+	 * animation intensity)
+	 * @param ioFinalColor Base color to modify 
+	 * @param ioFinalPosition Position to modify
+	 * @param ioFinalRotation Rotation of the texture to modify
+	 * @param ioFinalRectangle Texture rectangle to modify 
+	 * @param ioFinalTextureMapping Texture mapping to modify
 	 */
 	private void applyAnimationFrame(KeyFrame iAnimationFrame,
 			int iFrameToRender, Color ioFinalColor, Point2D ioFinalPosition,
@@ -382,7 +416,6 @@ public class SimpleStrRenderer implements Renderer {
 				iAnimationFrame.get_textureUVMapping()._a._y
 				* anifactor;
 	}
-
 	/**
 	 * Updates indexes of currently processed key frames for a layer given that
 	 * we're currently at frame number iFrameToRender. 
@@ -432,7 +465,11 @@ public class SimpleStrRenderer implements Renderer {
 			}
 		}
 	}
-
+	/**
+	 * Preserve current processing matrix and move rendering according to
+	 * renderer settings.
+	 * @param iGL GL context
+	 */
 	private void beforeRender(GL2 iGL) {
 		iGL.glPushMatrix();
 		iGL.glTranslatef(
@@ -445,13 +482,12 @@ public class SimpleStrRenderer implements Renderer {
 		iGL.glScalef(_xScale, _yScale, _zScale);
 		iGL.glEnable(GL.GL_TEXTURE_2D);
 	}
-
+	
 	@Override
 	public void initialize(GLAutoDrawable ioDrawable) {
 		System.out.println("Initializing Renderer...");
 		resetCurrentFrameTables();
 	}
-
 	/**
 	 * Resets tables which indicate current processing frames per layer.
 	 */
@@ -472,8 +508,6 @@ public class SimpleStrRenderer implements Renderer {
 	@Override
 	public void handleReshape(GLAutoDrawable drawable, int x, int y, int width,
 			int height) {
-		// TODO Auto-generated method stub
-		
+		// nothing to do.	
 	}
-
 }

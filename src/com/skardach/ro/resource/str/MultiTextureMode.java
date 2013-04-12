@@ -4,6 +4,7 @@ package com.skardach.ro.resource.str;
  * This should be refactored to an interface which provides texture manipulation
  * method and a parametrized factory for creation of objects implementing it,
  * one for each possible value.
+ * TODO: There is no support for multi texture mode so far.
  * @author Stanislaw Kardach
  *
  */

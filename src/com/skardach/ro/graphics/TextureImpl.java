@@ -12,9 +12,9 @@ import com.jogamp.opengl.util.texture.TextureIO;
 import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.Texture;
 /**
- * Class describing a texture.
- * There probably should be a method for loading texture when needed.
- * @author kardach
+ * Class describing a texture. Uses JOGL TextureIO toolkit to make things
+ * easier.
+ * @author Stanislaw Kardach
  *
  */
 public class TextureImpl implements Texture {
