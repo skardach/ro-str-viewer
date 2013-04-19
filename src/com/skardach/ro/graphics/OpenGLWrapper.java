@@ -9,7 +9,6 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.GLException;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
@@ -31,7 +30,7 @@ public class OpenGLWrapper {
 		public static final float CLIPPING_NEAR = 1.0f;
 		public static final float CLIPPING_FAR  = 1000.0f;
 		public static final float PERSPECTIVE_ANGLE = 45.0f;
-		public static final int ANIMATOR_FPS = 90;
+		public static final int ANIMATOR_FPS = FPSAnimator.DEFAULT_FRAMES_PER_INTERVAL;
 	}
 	/**
 	 * Used in JOGL drawing event calls. Calls renderer callbacks and performs
@@ -123,6 +122,28 @@ public class OpenGLWrapper {
 			// TODO: this is VERY crude...
 			double deltaAngle = Math.PI/18.0; // 10 degrees
 			switch(e.getKeyCode()) {
+			case (KeyEvent.VK_W):
+				_eyeY -= 10;
+				_centerY -= 10;
+				break;
+			case (KeyEvent.VK_S):
+				_eyeY += 10;
+				_centerY += 10;
+				break;
+			case (KeyEvent.VK_A):
+				_eyeX -= 10;
+				_centerX -= 10;
+				break;
+			case (KeyEvent.VK_D):
+				_eyeX += 10;
+				_centerX += 10;
+				break;
+			case (KeyEvent.VK_Q):
+				_eyeZ -= 10;
+				break;
+			case (KeyEvent.VK_E):
+				_eyeZ += 10;
+				break;
 			case (KeyEvent.VK_LEFT):
 				double currentAngle = calculateCurrentAngle(_eyeX, _eyeZ);
 				double r = Math.sqrt(_eyeX*_eyeX + _eyeY*_eyeY);

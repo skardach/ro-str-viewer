@@ -10,7 +10,7 @@ public enum KeyFrameType {
 	BASIC,
 	MORPH;
 	
-	static KeyFrameType fromInt(int iType)
+	public static KeyFrameType fromInt(int iType)
 	{
 		if(iType == 1)
 			return MORPH;

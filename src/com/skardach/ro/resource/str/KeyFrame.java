@@ -1,4 +1,5 @@
 package com.skardach.ro.resource.str;
+import com.skardach.ro.graphics.BlendType;
 import com.skardach.ro.graphics.Color;
 import com.skardach.ro.graphics.Point2D;
 import com.skardach.ro.graphics.Rectangle;
@@ -40,8 +41,8 @@ public class KeyFrame {
     float _animationDelta; ///< Texture animation delta.
     float _rotation; //< Rotation [0,1024[ is equivalent to [0,360[ degrees
     Color _color;
-    int _sourceBlend; //< Source blend mode
-    int _destBlend; //< Destination blend mode
+    BlendType _sourceBlend; //< Source blend mode
+    BlendType _destBlend; //< Destination blend mode
     MultiTextureMode _multiTexturePreset;
     
 	public final int get_framenum() {
@@ -77,10 +78,10 @@ public class KeyFrame {
 	public final Color get_color() {
 		return _color;
 	}
-	public final int get_sourceBlend() {
+	public final BlendType get_sourceBlend() {
 		return _sourceBlend;
 	}
-	public final int get_destBlend() {
+	public final BlendType get_destBlend() {
 		return _destBlend;
 	}
 	public final MultiTextureMode get_multiTexturePreset() {
@@ -121,10 +122,10 @@ public class KeyFrame {
 	public final void set_color(Color _color) {
 		this._color = _color;
 	}
-	public final void set_sourceAlpha(int _sourceAlpha) {
+	public final void set_sourceAlpha(BlendType _sourceAlpha) {
 		this._sourceBlend = _sourceAlpha;
 	}
-	public final void set_destAlpha(int _destAlpha) {
+	public final void set_destAlpha(BlendType _destAlpha) {
 		this._destBlend = _destAlpha;
 	}
 	public final void set_multiTexturePreset(MultiTextureMode _multiTexturePreset) {

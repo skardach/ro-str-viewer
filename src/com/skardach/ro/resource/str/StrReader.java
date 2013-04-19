@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import com.skardach.ro.common.LittleEndianInputStreamAdapter;
+import com.skardach.ro.graphics.BlendType;
 import com.skardach.ro.graphics.Color;
 import com.skardach.ro.graphics.Point2D;
 import com.skardach.ro.graphics.Rectangle;
@@ -198,8 +199,8 @@ public class StrReader {
 		float b = stream.readFloat();
 		float alpha = stream.readFloat();
 		keyFrame.set_color(new Color(r, g, b, alpha));
-		keyFrame.set_sourceAlpha(stream.readInt());
-		keyFrame.set_destAlpha(stream.readInt());
+		keyFrame.set_sourceAlpha(BlendType.fromInt(stream.readInt()));
+		keyFrame.set_destAlpha(BlendType.fromInt(stream.readInt()));
 		keyFrame.set_multiTexturePreset(MultiTextureMode.fromInt(stream.readInt()));
 		return keyFrame;
 	}

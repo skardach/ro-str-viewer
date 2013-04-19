@@ -2,8 +2,6 @@ package com.skardach.ro.tools;
 
 import java.awt.FileDialog;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -15,11 +13,7 @@ import java.io.InputStream;
 
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
-import javax.media.opengl.glu.GLU;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -78,6 +72,7 @@ public class STRViewer extends JFrame {
 	
 	private void run() {
 		_glWrapper.startAnimation();
+		_canvas.requestFocus();
 	}
 
 	public STRViewer() {
@@ -106,8 +101,7 @@ public class STRViewer extends JFrame {
 	private void start() {
 		// Choose STR
 		File strFile = chooseFile();
-		//File strFile = new File("/home/kardasan/dev/eclipse/ro-str_viewer/src/com/skardach/ro/resource/str/test/res/arrowstorm/stormgust.str");
-		//File strFile = new File("/home/kardasan/dev/eclipse/ro-str_viewer/src/com/skardach/ro/resource/str/test/res/arrowstorm/arrowstorm.str");
+		//File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/resurrection.str");
 		if(strFile != null) {
 			try {
 				// Read STR

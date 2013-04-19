@@ -82,6 +82,8 @@ public class TextureImpl implements Texture {
 				new File(_path, _name), 
 				false, 
 				extension);
+			// at this point check if alpha present and if not then add it
+			// based on color. Save the resulting texture for future.
 			// create the texture
 			_joglTexture = TextureIO.newTexture(_data);
 			// set some parameters

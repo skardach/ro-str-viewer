@@ -24,22 +24,6 @@ import com.skardach.ro.resource.str.Str;
 public class SimpleStrRenderer implements Renderer {
 	private static final float STR_ANGLE_TO_DEGREES = 2.8444f;
 	private static final int NO_FRAME = -1;
-	private static final int BLEND_MODES[] = {
-			GL.GL_ZERO,
-			GL.GL_ZERO,
-			GL.GL_ONE,
-			GL.GL_SRC_COLOR,
-			GL.GL_ONE_MINUS_SRC_COLOR,
-			GL.GL_SRC_ALPHA,
-			GL.GL_ONE_MINUS_SRC_ALPHA,
-			GL.GL_DST_ALPHA,
-			GL.GL_ONE_MINUS_DST_ALPHA,
-			GL.GL_DST_COLOR,
-			GL.GL_ONE_MINUS_DST_COLOR,
-			GL.GL_SRC_ALPHA_SATURATE,
-			GL.GL_SRC_ALPHA, // TODO: D3DBLEND_BOTHSRCALPHA
-			GL.GL_ZERO // TODO: D3DBLEND_BOTHINVSRCALPHA
-		};
 	// OpenGL utilities
 	GLU _glu = new GLU();
 	// Object rendered
@@ -88,7 +72,11 @@ public class SimpleStrRenderer implements Renderer {
 		_xRotation = iXRotation;
 		_yRotation = iYRotation;
 		_zRotation = iZRotation;
-		_xScale = iXScale;
+		// FIXME: -iXScale prevents mirror image when looking from +z axis
+		// I think that effect files are described as a reflection or should
+		// be viewed from -z axis... Not sure, to be checked when integrated to
+		// ro client.
+		_xScale = -iXScale;
 		_yScale = iYScale;
 		_zScale = iZScale;
 	}
@@ -103,6 +91,23 @@ public class SimpleStrRenderer implements Renderer {
 		beforeRender(gl);
 		render(gl, iDelaySinceLastInvoke);
 		afterRender(gl);
+	}
+	/**
+	 * Preserve current processing matrix and move rendering according to
+	 * renderer settings.
+	 * @param iGL GL context
+	 */
+	private void beforeRender(GL2 iGL) {
+		iGL.glPushMatrix();
+		iGL.glTranslatef(
+			_renderPosition._x,
+			_renderPosition._y,
+			_renderPosition._z);
+		iGL.glRotatef(-_xRotation, 1, 0, 0);
+		iGL.glRotatef(-_zRotation, 0, 0, 1);
+		iGL.glRotatef(-_yRotation, 0, 1, 0);
+		iGL.glScalef(_xScale, _yScale, _zScale);
+		iGL.glEnable(GL.GL_TEXTURE_2D);
 	}
 	/**
 	 * Restore original matrix.
@@ -228,7 +233,7 @@ public class SimpleStrRenderer implements Renderer {
 				}
 				iGL.glPushMatrix();
 				// TODO: Is this needed?
-				//Billboard(iGL);
+				Billboard(iGL);
 
 				iGL.glColor4ub(
 					(byte)finalColor._r, 
@@ -254,47 +259,48 @@ public class SimpleStrRenderer implements Renderer {
 				texture.bind(iGL);
 
 				iGL.glBlendFunc(
-					BLEND_MODES[baseFrame.get_sourceBlend()], 
-					BLEND_MODES[baseFrame.get_destBlend()]);
+					baseFrame.get_sourceBlend().toGLValue(),
+					baseFrame.get_destBlend().toGLValue());
 				iGL.glEnable(GL.GL_BLEND);
 				iGL.glEnable(GL.GL_TEXTURE_2D);
 				iGL.glEnable(GL2.GL_ALPHA_TEST);
 				iGL.glAlphaFunc(GL.GL_GREATER, 0.0f);
-				iGL.glColorMask(true, true, true, false);
+				iGL.glColorMask(true, true, true, true);
 
 				iGL.glBegin(GL2.GL_QUADS);
 				iGL.glTexCoord2f(
-					finalTextureMapping._b._x, 
-					finalTextureMapping._b._y);
+					finalTextureMapping._d._x,
+					finalTextureMapping._d._y);
 				iGL.glVertex3f(
 					finalRectangle._c._x,
 					finalRectangle._c._y,
 					0.01f * iLayerNumber);
 				
 				iGL.glTexCoord2f(
-					finalTextureMapping._a._x, 
-					finalTextureMapping._a._y);
+					finalTextureMapping._c._x,
+					finalTextureMapping._c._y);
 				iGL.glVertex3f(
 					finalRectangle._d._x,
 					finalRectangle._d._y,
 					0.01f * iLayerNumber);
 					
 				iGL.glTexCoord2f(
-					finalTextureMapping._c._x, 
-					finalTextureMapping._c._y);
+					finalTextureMapping._a._x,
+					finalTextureMapping._a._y);
 				iGL.glVertex3f(
 					finalRectangle._a._x,
 					finalRectangle._a._y,
 					0.01f * iLayerNumber);
 			
 				iGL.glTexCoord2f(
-					finalTextureMapping._d._x, 
-					finalTextureMapping._d._y);
+					finalTextureMapping._b._x,
+					finalTextureMapping._b._y);
 				iGL.glVertex3f(
 					finalRectangle._b._x,
 					finalRectangle._b._y,
 					0.01f * iLayerNumber);
 				iGL.glEnd();
+
 				iGL.glColorMask(true, true, true, true);
 				iGL.glDisable(GL2.GL_ALPHA_TEST);
 				iGL.glDisable(GL.GL_TEXTURE_2D);
@@ -464,23 +470,6 @@ public class SimpleStrRenderer implements Renderer {
 				}
 			}
 		}
-	}
-	/**
-	 * Preserve current processing matrix and move rendering according to
-	 * renderer settings.
-	 * @param iGL GL context
-	 */
-	private void beforeRender(GL2 iGL) {
-		iGL.glPushMatrix();
-		iGL.glTranslatef(
-			_renderPosition._x,
-			_renderPosition._y,
-			_renderPosition._z);
-		iGL.glRotatef(-_xRotation, 1, 0, 0);
-		iGL.glRotatef(-_zRotation, 0, 0, 1);
-		iGL.glRotatef(_yRotation, 0, 1, 0);
-		iGL.glScalef(_xScale, _yScale, _zScale);
-		iGL.glEnable(GL.GL_TEXTURE_2D);
 	}
 	
 	@Override
