@@ -62,9 +62,11 @@ public class Str {
 			iPrefix + "  _fps=" + _fps + ",\n"+
 			iPrefix + "  _reserved=" + Arrays.toString(_reserved) + ",\n"+
 			iPrefix + "  _layers= [\n";
+		int i = 1;
 		for(Layer l : _layers)
 		{
-			result += l.toString(iPrefix + "    ") + "\n";
+			result += l.toString(iPrefix + "    "+i+":") + "\n";
+			i++;
 		}
 		result += iPrefix + "  ]\n";
 		result += iPrefix + "]";

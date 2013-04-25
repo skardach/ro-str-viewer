@@ -1,5 +1,6 @@
 package com.skardach.ro.graphics;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.Buffer;
@@ -24,24 +25,24 @@ public class TextureImpl implements Texture {
 	TextureData _data;
 	com.jogamp.opengl.util.texture.Texture _joglTexture;
 	Integer _GLName = null;
-	
+
 	public TextureImpl(String iName, String iBasePath) {
 		_name = iName;
 		_path = iBasePath;
 	}
-	
+
 	@Override
 	public String toString() {
 		return toString("");
 	}
 
 	public String toString(String iPrefix) {
-		return iPrefix 
-			+ "Texture [_name=" 
+		return iPrefix
+			+ "Texture [_name="
 			+ _name
 			+ ", _path="
 			+ _path
-			+ ", _GLName=" 
+			+ ", _GLName="
 			+ _GLName
 			+ "]";
 	}
@@ -77,39 +78,40 @@ public class TextureImpl implements Texture {
 		String extension = _name.substring(idx);
 		try {
 			// Read the image
+			File textureFile = new File(_path, _name);
 			_data = TextureIO.newTextureData(
-				iGLContext.getGLProfile(), 
-				new File(_path, _name), 
-				false, 
+				iGLContext.getGLProfile(),
+				textureFile,
+				false,
 				extension);
-			// at this point check if alpha present and if not then add it
-			// based on color. Save the resulting texture for future.
+			if(_data == null)
+				throw new ResourceException("Could not read texture " + _name);
 			// create the texture
 			_joglTexture = TextureIO.newTexture(_data);
 			// set some parameters
 			_joglTexture.setTexParameterf(
-				iGLContext, 
-				GL.GL_TEXTURE_WRAP_S, 
+				iGLContext,
+				GL.GL_TEXTURE_WRAP_S,
 				GL.GL_REPEAT);
 			_joglTexture.setTexParameterf(
-				iGLContext, 
-				GL.GL_TEXTURE_WRAP_T, 
+				iGLContext,
+				GL.GL_TEXTURE_WRAP_T,
 				GL.GL_REPEAT);
 			_joglTexture.setTexParameterf(
-				iGLContext, 
+				iGLContext,
 				GL.GL_TEXTURE_MAG_FILTER,
 				GL.GL_LINEAR);
 			iGLContext.glTexEnvf(
-				GL2.GL_TEXTURE_ENV, 
-				GL2.GL_TEXTURE_ENV_MODE, 
+				GL2.GL_TEXTURE_ENV,
+				GL2.GL_TEXTURE_ENV_MODE,
 				GL2.GL_MODULATE);
 		} catch (IOException e) {
 			throw new ResourceException(
-				"Error loading texture from file: " 
-				+ _path 
-				+ File.pathSeparator 
-				+ _name 
-				+ ". Reason: " 
+				"Error loading texture from file: "
+				+ _path
+				+ File.pathSeparator
+				+ _name
+				+ ". Reason: "
 				+ e);
 		}
 	}

@@ -55,11 +55,11 @@ public class STRViewer extends JFrame {
 	// UI related
 	JTextArea _infoArea;
 	GLCanvas _canvas;
-	
+
 	// STR related
 	StrReader _reader = new StrReader();
 	Renderer _renderer;
-	
+
 	public static void main(String[] args) {
 		GLProfile.initSingleton(true);
 		STRViewer viewer = new STRViewer();
@@ -69,7 +69,7 @@ public class STRViewer extends JFrame {
 		if(!viewer.isVisible())
 			viewer.stop();
 	}
-	
+
 	private void run() {
 		_glWrapper.startAnimation();
 		_canvas.requestFocus();
@@ -105,7 +105,7 @@ public class STRViewer extends JFrame {
 		if(strFile != null) {
 			try {
 				// Read STR
-				ResourceManager _rm = 
+				ResourceManager _rm =
 					new ResourceManager(
 						new SimpleTextureManager(strFile.getParent()));
 				InputStream stream = new FileInputStream(strFile);
@@ -116,9 +116,9 @@ public class STRViewer extends JFrame {
 					_infoArea.setText(effect.toString());
 					// Initialize OpenGL
 					// Prepare rendering objects
-					_renderer = 
+					_renderer =
 						STRRendererFactory.createEffectRenderer(
-							effect, 
+							effect,
 							Settings.EFFECT_POSITION,
 							Settings.EFFECT_ROTATION_X,
 							Settings.EFFECT_ROTATION_Y,
@@ -134,30 +134,30 @@ public class STRViewer extends JFrame {
 				JOptionPane.showMessageDialog(
 					this,
 					String.format(
-						"Error opening file %s: %s", 
-						strFile, 
+						"Error opening file %s: %s",
+						strFile,
 						e.getMessage()));
 			} catch (ParseException e) {
 				JOptionPane.showMessageDialog(
 					this,
 					String.format(
-						"Error parsing file %s: %s", 
-						strFile, 
+						"Error parsing file %s: %s",
+						strFile,
 						e.getMessage()));
 			} catch (ResourceException e) {
 				JOptionPane.showMessageDialog(
 					this,
 					String.format(
-						"Resource error while processing file %s: %s", 
-						strFile, 
+						"Resource error while processing file %s: %s",
+						strFile,
 						e.getMessage()));
-			} 
+			}
 			catch (RenderException e) {
 				JOptionPane.showMessageDialog(
 					this,
 					String.format(
-						"Generic error while processing %s: %s", 
-						strFile, 
+						"Generic error while processing %s: %s",
+						strFile,
 						e.getMessage()));
 			}
 		}
@@ -173,10 +173,10 @@ public class STRViewer extends JFrame {
 	private File chooseFile() {
 		FileDialog fd = new FileDialog(this, "Select STR file");
 		fd.setFilenameFilter(new FilenameFilter() {
-			
+
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith("str"); 
+				return name.toLowerCase().endsWith("str");
 			}
 		});
 		fd.setVisible(true);

@@ -54,7 +54,7 @@ public class SimpleStrRenderer implements Renderer {
 	 * animation frames.
 	 */
 	int _currentAnimationFrameOnLayer[];
-	
+
 	public SimpleStrRenderer(
 			Str iEffect,
 			Point3D iRenderPosition,
@@ -81,7 +81,7 @@ public class SimpleStrRenderer implements Renderer {
 		_zScale = iZScale;
 	}
 	/**
-	 * Render a single frame. Preserves current matrix from being overwritten. 
+	 * Render a single frame. Preserves current matrix from being overwritten.
 	 */
 	@Override
 	public void renderFrame(
@@ -127,7 +127,7 @@ public class SimpleStrRenderer implements Renderer {
 	 * error, improper texture, etc.).
 	 */
 	private void render(
-			GL2 iGL, 
+			GL2 iGL,
 			long iDelaySinceLastInvoke) throws RenderException {
 		// few assertion to be sure we're sane
 		assert(_effect != null);
@@ -138,7 +138,7 @@ public class SimpleStrRenderer implements Renderer {
 		for(Layer l : _effect.get_layers()) {
 			renderLayer(
 				i,
-				l, 
+				l,
 				frameToRender,
 				iGL);
 			i++;
@@ -155,11 +155,11 @@ public class SimpleStrRenderer implements Renderer {
 		int frameToRender = 0;
 		if(_lastRenderedFrame != NO_FRAME) { // always start with first frame
 			frameToRender = // TODO: Original client doesn't care about FPS?
-				_lastRenderedFrame // last frame rendered 
+				_lastRenderedFrame // last frame rendered
 				+ (int)(( // + delay since last frame / time for single frame
 					iDelaySinceLastInvoke + _timeRemainderSinceLastFrame)
 					/ (1000/30)); // 1s / 30 FPS
-			_timeRemainderSinceLastFrame = 
+			_timeRemainderSinceLastFrame =
 					(long) ((iDelaySinceLastInvoke + _timeRemainderSinceLastFrame)
 					% (1000/30));
 		}
@@ -183,32 +183,32 @@ public class SimpleStrRenderer implements Renderer {
 	 * @throws RenderException If anything goes wrong with rendering.
 	 */
 	private void renderLayer(
-			int iLayerNumber, 
-			Layer iLayer, 
+			int iLayerNumber,
+			Layer iLayer,
 			int iFrameToRender,
 			GL2 iGL) throws RenderException {
 		updateProcessedKeyFrames(
-			iLayerNumber, 
-			iLayer.get_keyFrames(), 
+			iLayerNumber,
+			iLayer.get_keyFrames(),
 			iFrameToRender);
-		
+
 		if (_currentBaseFrameOnLayer[iLayerNumber] != NO_FRAME) {
 			// We have a base frame to work on...
 			float currentcolor[] = new float[4];
 			iGL.glGetFloatv(GL2.GL_CURRENT_COLOR, currentcolor, 0);
-			KeyFrame baseFrame = 
+			KeyFrame baseFrame =
 				iLayer.get_keyFrames().get(
 					_currentBaseFrameOnLayer[iLayerNumber]);
 			// if alpha is more than 0, something is visible so let's draw
 			if (baseFrame.get_color()._alpha > 0) {
 				Color finalColor = new Color(baseFrame.get_color());
-				Point2D finalPosition = 
+				Point2D finalPosition =
 						new Point2D(// FIXME: openro: Why 320 and 290?
 							baseFrame.get_position()._x - 320,
 							baseFrame.get_position()._y - 290);
 				float finalRotation =
-						baseFrame.get_rotation() / STR_ANGLE_TO_DEGREES; 
-				Rectangle<Point2D> finalRectangle = 
+						baseFrame.get_rotation() / STR_ANGLE_TO_DEGREES;
+				Rectangle<Point2D> finalRectangle =
 					new Rectangle<Point2D>(
 						new Point2D(baseFrame.get_drawingRectangle().get_a()),
 						new Point2D(baseFrame.get_drawingRectangle().get_b()),
@@ -220,11 +220,11 @@ public class SimpleStrRenderer implements Renderer {
 						new Point2D(baseFrame.get_textureUVMapping().get_b()),
 						new Point2D(baseFrame.get_textureUVMapping().get_c()),
 						new Point2D(baseFrame.get_textureUVMapping().get_d()));
-				Texture texture = 
+				Texture texture =
 					iLayer.get_textures().get((int)baseFrame.get_textureId());
-				
+
 				if (_currentAnimationFrameOnLayer[iLayerNumber] != NO_FRAME) {
-					KeyFrame animationFrame = 
+					KeyFrame animationFrame =
 						iLayer.get_keyFrames().get(
 							_currentAnimationFrameOnLayer[iLayerNumber]);
 					applyAnimationFrame(animationFrame, iFrameToRender,
@@ -232,40 +232,42 @@ public class SimpleStrRenderer implements Renderer {
 							finalRectangle, finalTextureMapping);
 				}
 				iGL.glPushMatrix();
-				// TODO: Is this needed?
+
 				Billboard(iGL);
 
 				iGL.glColor4ub(
-					(byte)finalColor._r, 
-					(byte)finalColor._g, 
-					(byte)finalColor._b, 
+					(byte)finalColor._r,
+					(byte)finalColor._g,
+					(byte)finalColor._b,
 					(byte)finalColor._alpha);
 				iGL.glTranslatef(
-					finalPosition._x, 
-					finalPosition._y, 
-					-0.5f); // FIXME: openro: why -0.5?
+					finalPosition._x,
+					finalPosition._y,
+					-0.5f); // 50 layers max?
 				iGL.glRotatef(finalRotation, 0, 0, 1);
+
+				iGL.glBlendFunc(
+						baseFrame.get_sourceBlend().toGLValue(),
+						baseFrame.get_destBlend().toGLValue());
+
+				iGL.glEnable(GL.GL_BLEND);
+				iGL.glAlphaFunc(GL.GL_GREATER, 0.5f);
+				iGL.glEnable(GL2.GL_ALPHA_TEST);
+				iGL.glEnable(GL.GL_TEXTURE_2D);
 
 				if(!texture.isLoaded())
 					try {
 						texture.load(iGL);
 					} catch (ResourceException e) {
 						throw new RenderException(
-							"Could not load texture: " 
-							+ texture 
-							+ ". Reason: " 
+							"Could not load texture: "
+							+ texture
+							+ ". Reason: "
 							+ e);
 					}
 				texture.bind(iGL);
 
-				iGL.glBlendFunc(
-					baseFrame.get_sourceBlend().toGLValue(),
-					baseFrame.get_destBlend().toGLValue());
-				iGL.glEnable(GL.GL_BLEND);
-				iGL.glEnable(GL.GL_TEXTURE_2D);
-				iGL.glEnable(GL2.GL_ALPHA_TEST);
-				iGL.glAlphaFunc(GL.GL_GREATER, 0.0f);
-				iGL.glColorMask(true, true, true, true);
+				iGL.glColorMask(true, true, true, false);
 
 				iGL.glBegin(GL2.GL_QUADS);
 				iGL.glTexCoord2f(
@@ -275,7 +277,7 @@ public class SimpleStrRenderer implements Renderer {
 					finalRectangle._c._x,
 					finalRectangle._c._y,
 					0.01f * iLayerNumber);
-				
+
 				iGL.glTexCoord2f(
 					finalTextureMapping._c._x,
 					finalTextureMapping._c._y);
@@ -283,7 +285,7 @@ public class SimpleStrRenderer implements Renderer {
 					finalRectangle._d._x,
 					finalRectangle._d._y,
 					0.01f * iLayerNumber);
-					
+
 				iGL.glTexCoord2f(
 					finalTextureMapping._a._x,
 					finalTextureMapping._a._y);
@@ -291,7 +293,7 @@ public class SimpleStrRenderer implements Renderer {
 					finalRectangle._a._x,
 					finalRectangle._a._y,
 					0.01f * iLayerNumber);
-			
+
 				iGL.glTexCoord2f(
 					finalTextureMapping._b._x,
 					finalTextureMapping._b._y);
@@ -307,7 +309,7 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glDisable(GL.GL_BLEND);
 				iGL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 				iGL.glColor4f(
-					currentcolor[0], 
+					currentcolor[0],
 					currentcolor[1],
 					currentcolor[2],
 					currentcolor[3]);
@@ -320,12 +322,12 @@ public class SimpleStrRenderer implements Renderer {
 	 * @param iGL GL context
 	 */
 	private void Billboard(GL2 iGL) {
-		// Cheat Cylindrical. Credits: 
+		// Cheat Cylindrical. Credits:
 		// http://www.lighthouse3d.com/opengl/billboarding/index.php3?billCheat1
 		float modelview[] = new float[16];
 		iGL.glGetFloatv(GL2.GL_MODELVIEW_MATRIX , modelview, 0);
 		float v;
-		for( int i=0; i<3; i+=2 ) 
+		for( int i=0; i<3; i+=2 )
 		    for( int j=0; j<3; j++ ) {
 				if ( i==j ) {
 					if (i == 0)
@@ -348,55 +350,55 @@ public class SimpleStrRenderer implements Renderer {
 	 * @param iAnimationFrame Animation frame to apply
 	 * @param iFrameToRender current rendered frame (used to calculate
 	 * animation intensity)
-	 * @param ioFinalColor Base color to modify 
+	 * @param ioFinalColor Base color to modify
 	 * @param ioFinalPosition Position to modify
 	 * @param ioFinalRotation Rotation of the texture to modify
-	 * @param ioFinalRectangle Texture rectangle to modify 
+	 * @param ioFinalRectangle Texture rectangle to modify
 	 * @param ioFinalTextureMapping Texture mapping to modify
 	 */
 	private void applyAnimationFrame(KeyFrame iAnimationFrame,
 			int iFrameToRender, Color ioFinalColor, Point2D ioFinalPosition,
 			float ioFinalRotation, Rectangle<Point2D> ioFinalRectangle,
 			Rectangle<Point2D> ioFinalTextureMapping) {
-		int anifactor = 
+		int anifactor =
 			iFrameToRender - iAnimationFrame.get_framenum();
 		ioFinalColor._r += iAnimationFrame.get_color()._r * anifactor;
 		ioFinalColor._g += iAnimationFrame.get_color()._g * anifactor;
 		ioFinalColor._b += iAnimationFrame.get_color()._b * anifactor;
-		ioFinalColor._alpha += 
+		ioFinalColor._alpha +=
 			iAnimationFrame.get_color()._alpha * anifactor;
-		ioFinalPosition._x += 
+		ioFinalPosition._x +=
 			iAnimationFrame.get_position()._x * anifactor;
 		ioFinalPosition._y +=
 				iAnimationFrame.get_position()._y * anifactor;
-		ioFinalRotation += 
-			(iAnimationFrame.get_rotation() / STR_ANGLE_TO_DEGREES) 
+		ioFinalRotation +=
+			(iAnimationFrame.get_rotation() / STR_ANGLE_TO_DEGREES)
 			* anifactor;
-		ioFinalRectangle._a._x += 
-				iAnimationFrame.get_drawingRectangle()._a._x 
+		ioFinalRectangle._a._x +=
+				iAnimationFrame.get_drawingRectangle()._a._x
 				* anifactor;
-		ioFinalRectangle._a._y += 
-				iAnimationFrame.get_drawingRectangle()._a._y 
+		ioFinalRectangle._a._y +=
+				iAnimationFrame.get_drawingRectangle()._a._y
 				* anifactor;
-		ioFinalRectangle._b._x += 
-				iAnimationFrame.get_drawingRectangle()._b._x 
+		ioFinalRectangle._b._x +=
+				iAnimationFrame.get_drawingRectangle()._b._x
 				* anifactor;
-		ioFinalRectangle._b._y += 
-				iAnimationFrame.get_drawingRectangle()._b._y 
+		ioFinalRectangle._b._y +=
+				iAnimationFrame.get_drawingRectangle()._b._y
 				* anifactor;
-		ioFinalRectangle._c._x += 
-				iAnimationFrame.get_drawingRectangle()._c._x 
+		ioFinalRectangle._c._x +=
+				iAnimationFrame.get_drawingRectangle()._c._x
 				* anifactor;
-		ioFinalRectangle._c._y += 
-				iAnimationFrame.get_drawingRectangle()._c._y 
+		ioFinalRectangle._c._y +=
+				iAnimationFrame.get_drawingRectangle()._c._y
 				* anifactor;
-		ioFinalRectangle._d._x += 
-				iAnimationFrame.get_drawingRectangle()._d._x 
+		ioFinalRectangle._d._x +=
+				iAnimationFrame.get_drawingRectangle()._d._x
 				* anifactor;
-		ioFinalRectangle._d._y += 
-				iAnimationFrame.get_drawingRectangle()._d._y 
+		ioFinalRectangle._d._y +=
+				iAnimationFrame.get_drawingRectangle()._d._y
 				* anifactor;
-		
+
 		ioFinalTextureMapping._a._x +=
 				iAnimationFrame.get_textureUVMapping()._a._x
 				* anifactor;
@@ -424,29 +426,29 @@ public class SimpleStrRenderer implements Renderer {
 	}
 	/**
 	 * Updates indexes of currently processed key frames for a layer given that
-	 * we're currently at frame number iFrameToRender. 
-	 * @param iLayerNumber Layer number 
+	 * we're currently at frame number iFrameToRender.
+	 * @param iLayerNumber Layer number
 	 * @param iFrameToRender
 	 * @throws ResourceException
 	 */
 	private void updateProcessedKeyFrames(
-			int iLayerNumber, 
+			int iLayerNumber,
 			List<KeyFrame> iLayerFrames,
 			int iFrameToRender) throws RenderException {
 		// First check if current frame to render is a base or animation
 		// frame on this layer.
 		for(
-				int frameIdx = 1 + // start looking next frame after... 
+				int frameIdx = 1 + // start looking next frame after...
 					(_currentAnimationFrameOnLayer[iLayerNumber] != NO_FRAME ?
 					// After current animation frame because it's always after
 					// base frame.
 						_currentAnimationFrameOnLayer[iLayerNumber]
 					// Since there is no animation frame processed then base
 					// frame will be the best place to start search
-						: _currentBaseFrameOnLayer[iLayerNumber]); 
+						: _currentBaseFrameOnLayer[iLayerNumber]);
 				frameIdx < iLayerFrames.size() // look until the end...
-					&& iFrameToRender // or we pass the current frame number 
-						<= iLayerFrames.get(frameIdx).get_framenum();  
+					&& iFrameToRender // or we pass the current frame number
+						<= iLayerFrames.get(frameIdx).get_framenum();
 				frameIdx++) {
 			KeyFrame kf = iLayerFrames.get(frameIdx);
 			if(kf.get_framenum() == iFrameToRender) {
@@ -459,19 +461,19 @@ public class SimpleStrRenderer implements Renderer {
 				} else if (kf.get_frameType() == KeyFrameType.MORPH) {
 					// We got a new animation frame so set it to apply
 					// to the basic frame that will be processed.
-					_currentAnimationFrameOnLayer[iLayerNumber] = 
+					_currentAnimationFrameOnLayer[iLayerNumber] =
 							frameIdx;
 					break;
 				} else {
 					throw new RenderException(
-						"Unknown frame type " 
-						+ kf.get_frameType() 
+						"Unknown frame type "
+						+ kf.get_frameType()
 						+ "cannot render");
 				}
 			}
 		}
 	}
-	
+
 	@Override
 	public void initialize(GLAutoDrawable ioDrawable) {
 		System.out.println("Initializing Renderer...");
@@ -484,7 +486,7 @@ public class SimpleStrRenderer implements Renderer {
 		_currentBaseFrameOnLayer = new int[_effect.get_layers().size()];
 		_currentAnimationFrameOnLayer = new int[_effect.get_layers().size()];
 		for(int i = 0; i < _effect.get_layers().size(); i++) {
-			_currentBaseFrameOnLayer[i] = NO_FRAME; 
+			_currentBaseFrameOnLayer[i] = NO_FRAME;
 			_currentAnimationFrameOnLayer[i] = NO_FRAME;
 		}
 	}
@@ -497,6 +499,6 @@ public class SimpleStrRenderer implements Renderer {
 	@Override
 	public void handleReshape(GLAutoDrawable drawable, int x, int y, int width,
 			int height) {
-		// nothing to do.	
+		// nothing to do.
 	}
 }
