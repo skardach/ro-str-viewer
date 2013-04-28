@@ -13,6 +13,9 @@ public class STRRendererFactory {
 	/**
 	 * Create the STR file renderer which will render the effect at given
 	 * position, with given rotation and scale.
+	 * @param iPreloadTextures If true then renderer should pre-load all
+	 * textures before first call to
+	 * {@link Renderer#renderFrame(javax.media.opengl.GLAutoDrawable, long)}.
 	 * @throws RenderException In case creating the renderer fails.
 	 */
 	public static Renderer createEffectRenderer(
@@ -23,9 +26,14 @@ public class STRRendererFactory {
 			float iZRotation,
 			float iXScale,
 			float iYScale,
-			float iZScale) throws RenderException {
+			float iZScale,
+			int iFps,
+			boolean iPreloadTextures) throws RenderException {
+		assert(iEffect != null);
 		return new SimpleStrRenderer(
 				iEffect,
+				new StepCalculator(),
+				iPreloadTextures,
 				iRenderPosition,
 				iXRotation,
 				iYRotation,

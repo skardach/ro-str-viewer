@@ -18,17 +18,18 @@ import com.skardach.ro.resource.str.Str;
  * Simple implementation of rendering STR files. Most of the credit goes to
  * open-ragnarok project whose implementation of rendering was a guideline to
  * this one.
- * @author kardasan
+ * @author Stanislaw Kardach
  *
  */
 public class SimpleStrRenderer implements Renderer {
 	private static final float STR_ANGLE_TO_DEGREES = 2.8444f;
-	private static final int NO_FRAME = -1;
+
 	// OpenGL utilities
 	GLU _glu = new GLU();
 	// Object rendered
 	Str _effect;
 	// Rendering parameters
+	boolean _preloadTextures;
 	Point3D _renderPosition;
 	float _xRotation;
 	float _yRotation;
@@ -36,9 +37,9 @@ public class SimpleStrRenderer implements Renderer {
 	float _xScale;
 	float _yScale;
 	float _zScale;
-	// rendering helper variables
-	long _timeRemainderSinceLastFrame = 0;
-	int _lastRenderedFrame = NO_FRAME;
+	// rendering helper objects and variables
+	FrameAdvanceCalculator _frameAdvanceCalculator = null;
+	int _lastRenderedFrame = FrameAdvanceCalculator.NO_FRAME;
 	/**
 	 * Keeps track of which base frame should be a base for rendering for given
 	 * layer. i.e. If current frame is 35 and on layer x there is a base frame
@@ -54,9 +55,33 @@ public class SimpleStrRenderer implements Renderer {
 	 * animation frames.
 	 */
 	int _currentAnimationFrameOnLayer[];
-
+	/**
+	 * Create a simple implementation of Effect renderer. It is based on
+	 * open-raganrok implementation
+	 * @param iEffect Effect to render
+	 * @param iFrameAdvanceCalculator Object calculating which frame to
+	 * calculate next. Depending on implementation this can allow to have a
+	 * frame skip mechanism on the renderer level. Note that due to the STR
+	 * file format skipping too many frames may result in skipping some base
+	 * frames and hence miss parts of animation.
+	 * @param iPreloadTextures If true then renderer will call
+	 * {@link Texture#load(GL2)} on all textures used in all layers in
+	 * {@link #initialize(GLAutoDrawable)} method to have them loaded before
+	 * rendering begins. Naturally if textures are managed by an external
+	 * texture manager, this may not be required.
+	 * @param iRenderPosition Where the effect should be rendered.
+	 * @param iXRotation Additional rotation if required.
+	 * @param iYRotation Additional rotation if required.
+	 * @param iZRotation Additional rotation if required.
+	 * @param iXScale How much to scale.
+	 * @param iYScale How much to scale.
+	 * @param iZScale How much to scale.
+	 * @throws RenderException If iEffect is null.
+	 */
 	public SimpleStrRenderer(
 			Str iEffect,
+			FrameAdvanceCalculator iFrameAdvanceCalculator,
+			boolean iPreloadTextures,
 			Point3D iRenderPosition,
 			float iXRotation,
 			float iYRotation,
@@ -67,7 +92,9 @@ public class SimpleStrRenderer implements Renderer {
 		assert(iEffect != null);
 		if(iEffect == null)
 			throw new RenderException("Effect cannot be null");
+		_frameAdvanceCalculator = iFrameAdvanceCalculator;
 		_effect = iEffect;
+		_preloadTextures = iPreloadTextures;
 		_renderPosition = iRenderPosition;
 		_xRotation = iXRotation;
 		_yRotation = iYRotation;
@@ -80,8 +107,15 @@ public class SimpleStrRenderer implements Renderer {
 		_yScale = iYScale;
 		_zScale = iZScale;
 	}
+	@Override
+	public void reset() {
+		resetCurrentFrameTables();
+		_lastRenderedFrame = FrameAdvanceCalculator.NO_FRAME;
+	}
 	/**
 	 * Render a single frame. Preserves current matrix from being overwritten.
+	 * @param ioCanvas OpenGL context
+	 * @param iDelaySinceLastInvoke Delay in ms since last invoke.
 	 */
 	@Override
 	public void renderFrame(
@@ -131,9 +165,16 @@ public class SimpleStrRenderer implements Renderer {
 			long iDelaySinceLastInvoke) throws RenderException {
 		// few assertion to be sure we're sane
 		assert(_effect != null);
-		assert(_effect.get_fps() > 0);
 		// Check which frame should we render
-		int frameToRender = calculateFrameToRender(iDelaySinceLastInvoke);
+		int frameToRender =
+			_frameAdvanceCalculator.calculateFrameToRender(
+				iDelaySinceLastInvoke,
+				_lastRenderedFrame);
+		if(frameToRender >= _effect.get_frameCount()) {
+			// Since we've made an animation loop first reset layer counters
+			resetCurrentFrameTables();
+			frameToRender %= _effect.get_frameCount();
+		}
 		int i = 0;
 		for(Layer l : _effect.get_layers()) {
 			renderLayer(
@@ -144,31 +185,6 @@ public class SimpleStrRenderer implements Renderer {
 			i++;
 		}
 		_lastRenderedFrame = frameToRender;
-	}
-	/**
-	 * Calculate which frame to render next. FPS in the effect files are crap
-	 * so assume 30 FPS as the original client.
-	 * @param iDelaySinceLastInvoke
-	 * @return
-	 */
-	public int calculateFrameToRender(long iDelaySinceLastInvoke) {
-		int frameToRender = 0;
-		if(_lastRenderedFrame != NO_FRAME) { // always start with first frame
-			frameToRender = // TODO: Original client doesn't care about FPS?
-				_lastRenderedFrame // last frame rendered
-				+ (int)(( // + delay since last frame / time for single frame
-					iDelaySinceLastInvoke + _timeRemainderSinceLastFrame)
-					/ (1000/30)); // 1s / 30 FPS
-			_timeRemainderSinceLastFrame =
-					(long) ((iDelaySinceLastInvoke + _timeRemainderSinceLastFrame)
-					% (1000/30));
-		}
-		if(frameToRender >= _effect.get_frameCount()) {
-			// Since we've made an animation loop first reset layer counters
-			resetCurrentFrameTables();
-			frameToRender %= _effect.get_frameCount();
-		}
-		return frameToRender;
 	}
 	/**
 	 * Render a single layer. Texture and location data are taken from a current
@@ -192,7 +208,8 @@ public class SimpleStrRenderer implements Renderer {
 			iLayer.get_keyFrames(),
 			iFrameToRender);
 
-		if (_currentBaseFrameOnLayer[iLayerNumber] != NO_FRAME) {
+		if (_currentBaseFrameOnLayer[iLayerNumber]
+			!= FrameAdvanceCalculator.NO_FRAME) {
 			// We have a base frame to work on...
 			float currentcolor[] = new float[4];
 			iGL.glGetFloatv(GL2.GL_CURRENT_COLOR, currentcolor, 0);
@@ -203,7 +220,7 @@ public class SimpleStrRenderer implements Renderer {
 			if (baseFrame.get_color()._alpha > 0) {
 				Color finalColor = new Color(baseFrame.get_color());
 				Point2D finalPosition =
-						new Point2D(// FIXME: openro: Why 320 and 290?
+						new Point2D( // translate by character size
 							baseFrame.get_position()._x - 320,
 							baseFrame.get_position()._y - 290);
 				float finalRotation =
@@ -223,7 +240,8 @@ public class SimpleStrRenderer implements Renderer {
 				Texture texture =
 					iLayer.get_textures().get((int)baseFrame.get_textureId());
 
-				if (_currentAnimationFrameOnLayer[iLayerNumber] != NO_FRAME) {
+				if (_currentAnimationFrameOnLayer[iLayerNumber]
+					!= FrameAdvanceCalculator.NO_FRAME) {
 					KeyFrame animationFrame =
 						iLayer.get_keyFrames().get(
 							_currentAnimationFrameOnLayer[iLayerNumber]);
@@ -439,7 +457,8 @@ public class SimpleStrRenderer implements Renderer {
 		// frame on this layer.
 		for(
 				int frameIdx = 1 + // start looking next frame after...
-					(_currentAnimationFrameOnLayer[iLayerNumber] != NO_FRAME ?
+					(_currentAnimationFrameOnLayer[iLayerNumber]
+					!= FrameAdvanceCalculator.NO_FRAME ?
 					// After current animation frame because it's always after
 					// base frame.
 						_currentAnimationFrameOnLayer[iLayerNumber]
@@ -456,7 +475,8 @@ public class SimpleStrRenderer implements Renderer {
 					// new base frame, use it and reset animation frame
 					// since it should end
 					_currentBaseFrameOnLayer[iLayerNumber] = frameIdx;
-					_currentAnimationFrameOnLayer[iLayerNumber] = NO_FRAME;
+					_currentAnimationFrameOnLayer[iLayerNumber] =
+						FrameAdvanceCalculator.NO_FRAME;
 					break;
 				} else if (kf.get_frameType() == KeyFrameType.MORPH) {
 					// We got a new animation frame so set it to apply
@@ -475,8 +495,13 @@ public class SimpleStrRenderer implements Renderer {
 	}
 
 	@Override
-	public void initialize(GLAutoDrawable ioDrawable) {
-		System.out.println("Initializing Renderer...");
+	public void initialize(GLAutoDrawable ioDrawable) throws ResourceException {
+		GL2 gl = ioDrawable.getGL().getGL2();
+		if(_preloadTextures) {
+			for(Layer l : _effect.get_layers())
+				for(Texture t : l.get_textures())
+					t.load(gl);
+		}
 		resetCurrentFrameTables();
 	}
 	/**
@@ -486,14 +511,13 @@ public class SimpleStrRenderer implements Renderer {
 		_currentBaseFrameOnLayer = new int[_effect.get_layers().size()];
 		_currentAnimationFrameOnLayer = new int[_effect.get_layers().size()];
 		for(int i = 0; i < _effect.get_layers().size(); i++) {
-			_currentBaseFrameOnLayer[i] = NO_FRAME;
-			_currentAnimationFrameOnLayer[i] = NO_FRAME;
+			_currentBaseFrameOnLayer[i] = FrameAdvanceCalculator.NO_FRAME;
+			_currentAnimationFrameOnLayer[i] = FrameAdvanceCalculator.NO_FRAME;
 		}
 	}
 
 	@Override
 	public void dispose(GLAutoDrawable ioDrawable) {
-		System.out.println("Disposing Renderer...");
 	}
 
 	@Override

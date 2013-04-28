@@ -1,7 +1,10 @@
 package com.skardach.ro.tools;
 
+import java.awt.Button;
 import java.awt.FileDialog;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -11,10 +14,11 @@ import java.io.FilenameFilter;
 import java.io.InputStream;
 
 
-import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
@@ -55,13 +59,12 @@ public class STRViewer extends JFrame {
 	// UI related
 	JTextArea _infoArea;
 	GLCanvas _canvas;
-
-	// STR related
-	StrReader _reader = new StrReader();
-	Renderer _renderer;
-
+	/**
+	 * Main method. Initialise OpenGL and run the viewer.
+	 * @param args
+	 */
 	public static void main(String[] args) {
-		GLProfile.initSingleton(true);
+		OpenGLWrapper.initOpenGL();
 		STRViewer viewer = new STRViewer();
 		viewer.start();
 		if(viewer.isVisible())
@@ -71,22 +74,61 @@ public class STRViewer extends JFrame {
 	}
 
 	private void run() {
-		_glWrapper.startAnimation();
 		_canvas.requestFocus();
 	}
-
+	/**
+	 * Construct the viewer window.
+	 */
 	public STRViewer() {
 		setTitle("STRViewer");
-		setSize(800, 600);
 		getContentPane().setLayout(new GridLayout(2, 1));
-		_glWrapper = OpenGLWrapper.createDesktopWrapper();
+		_glWrapper = OpenGLWrapper.createDesktopWrapper(60);
+		// OpenGL canvas
 		_canvas = _glWrapper.createGLCanvasWithAnimator();
-		getContentPane().add(_canvas);
+		add(_canvas);
 		// Add text area
 		_infoArea = new JTextArea();
 		_infoArea.setEditable(false);
-		JScrollPane p = new JScrollPane(_infoArea);
-		getContentPane().add(p);
+		JScrollPane scrollPane = new JScrollPane(_infoArea);
+		JPanel panel = new JPanel(true);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		panel.add(scrollPane);
+		// vertical stack panel for start/stop, pause/resume buttons
+		JPanel buttonPanel = new JPanel(true);
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+		Button startStopAnimationButton = new Button("Start");
+		startStopAnimationButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Button b = (Button)e.getSource();
+				if(b.getLabel() == "Start") { // TODO: this could be a state
+					_glWrapper.resetAnimation();
+					_glWrapper.startAnimation();
+					b.setLabel("Stop");
+				} else {
+					_glWrapper.stopAnimation();
+					b.setLabel("Start");
+				}
+			}
+		});
+		Button pauseResumeAnimationButton = new Button("Pause");
+		pauseResumeAnimationButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Button b = (Button)e.getSource();
+				if(b.getLabel() == "Pause") { // TODO: this could be a state
+					_glWrapper.stopAnimation();
+					b.setLabel("Resume");
+				} else {
+					_glWrapper.startAnimation();
+					b.setLabel("Pause");
+				}
+			}
+		});
+		buttonPanel.add(startStopAnimationButton);
+		buttonPanel.add(pauseResumeAnimationButton);
+		panel.add(buttonPanel);
+		getContentPane().add(panel);
 
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -96,27 +138,29 @@ public class STRViewer extends JFrame {
 				System.exit(0);
 			}
 		});
+		pack();
+		setSize(800, 600);
 	}
 
 	private void start() {
 		// Choose STR
 		File strFile = chooseFile();
-		//File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/resurrection.str");
 		if(strFile != null) {
 			try {
 				// Read STR
-				ResourceManager _rm =
+				ResourceManager rm =
 					new ResourceManager(
 						new SimpleTextureManager(strFile.getParent()));
 				InputStream stream = new FileInputStream(strFile);
-				Str effect = _reader.readFromStream(_rm, stream);
+				StrReader reader = new StrReader();
+				Str effect = reader.readFromStream(rm, stream);
 				if(effect != null)
 				{
 					// fill in the STR details
 					_infoArea.setText(effect.toString());
-					// Initialize OpenGL
+					// Initialise OpenGL
 					// Prepare rendering objects
-					_renderer =
+					Renderer renderer =
 						STRRendererFactory.createEffectRenderer(
 							effect,
 							Settings.EFFECT_POSITION,
@@ -125,8 +169,11 @@ public class STRViewer extends JFrame {
 							Settings.EFFECT_ROTATION_Z,
 							Settings.EFFECT_SCALE_X,
 							Settings.EFFECT_SCALE_Y,
-							Settings.EFFECT_SCALE_Z);
-					_glWrapper.registerRendererOnCanvas(_renderer, _canvas);
+							Settings.EFFECT_SCALE_Z,
+							60,
+							true);
+					// Pre-load textures
+					_glWrapper.registerRendererOnCanvas(renderer, _canvas);
 					// Display everything
 					setVisible(true);
 				}
@@ -165,9 +212,9 @@ public class STRViewer extends JFrame {
 
 	private void stop() {
 		setVisible(false);
-		dispose();
 		_glWrapper.stopAnimation();
 		_glWrapper.destroyCanvas(_canvas);
+		dispose();
 	}
 
 	private File chooseFile() {

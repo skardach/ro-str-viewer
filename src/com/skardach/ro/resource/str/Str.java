@@ -8,54 +8,74 @@ import java.util.List;
  * Effect animation definition mapping contents of *.str files.
  * It contains all the fields from .str file. Some of them may
  * be probably removed (_layerCount, _reserved)?
- * @author Stan Kardach
+ * @author Stanislaw Kardach
  *
  */
 public class Str {
-	public static final byte MAGIC[] = {'S', 'T', 'R', 'M'};
-	public static final int SUPPORTED_VERSION = 148;
-	public static final int DEFAULT_FPS = 60;
-	public static final int RESERVED_FIELD_SIZE = 16; // bytes
-	public static final int TEXTURE_NAME_SIZE = 128;
-	/*
-	 * Maximum count of things. Unlike in roint implementation,
-	 * I do now use malloc to reserve space so I'm not bound by
-	 * size_t. 
+	/**
+	 * Size of the reserved field.
 	 */
-	public static final int MAX_LAYER_COUNT = Integer.MAX_VALUE;
-	
+	public static final int RESERVED_FIELD_SIZE = 16; // bytes
+	/**
+	 * @return Get version of the STR description.
+	 */
 	public synchronized int get_version() {
 		return _version;
 	}
+	/**
+	 * Set version of STR description
+	 */
 	public synchronized void set_version(int _version) {
 		this._version = _version;
 	}
+	/**
+	 * @return Get number of frames in this effect.
+	 */
 	public synchronized int get_frameCount() {
 		return _frameCount;
 	}
+	/**
+	 * Set number of frames in this effect.
+	 */
 	public synchronized void set_frameCount(int _frameCount) {
 		this._frameCount = _frameCount;
 	}
+	/**
+	 * @return Get frames per second for this effect.
+	 */
 	public synchronized int get_fps() {
 		return _fps;
 	}
+	/**
+	 * Set frames per second for this effect.
+	 */
 	public synchronized void set_fps(int _fps) {
 		this._fps = _fps;
 	}
+	/**
+	 * @return Get reserved bytes
+	 */
 	public synchronized byte[] get_reserved() {
 		return _reserved;
 	}
+	/**
+	 * @return Get list of layers in this effect
+	 */
 	public synchronized List<Layer> get_layers() {
 		return _layers;
 	}
-	
+
 	@Override
 	public String toString() {
 		return toString("");
 	}
-	
+	/**
+	 * String representation prepended by prefix
+	 * @param iPrefix prefix to prepend
+	 * @return String representation
+	 */
 	public String toString(String iPrefix) {
-		String result = 
+		String result =
 			iPrefix + "Str [\n"+
 			iPrefix + "  _version=" + _version + ",\n"+
 			iPrefix + "  _frameCount=" + _frameCount + ",\n"+

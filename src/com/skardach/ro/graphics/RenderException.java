@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.skardach.ro.graphics;
 
@@ -10,6 +10,10 @@ package com.skardach.ro.graphics;
  */
 public class RenderException extends Exception {
 	private static final long serialVersionUID = -1711254889216629098L;
+	/**
+	 * Create exception with given error message.
+	 * @param string error message
+	 */
 	public RenderException(String string) {
 		super(string);
 	}

@@ -1,43 +1,61 @@
 package com.skardach.ro.resource.str;
 
-/// Texture animation type.
-/// Determines how aniframe morphs per frame.
+/**
+ * Texture animation type.
+ * Determines how aniframe morphs per frame.
+ * @author Stanislaw Kardach
+ *
+ */
 public enum AnimationType {
-	/// Something unsupported
+	/**
+	 * Something unsupported
+	 */
 	UNKNOWN,
-    /// - 0 - no change
+    /**
+     * - no change
+     */
 	NO_CHANGE,
-    /// - 1 - ]-inf,inf[ <pre>
-    ///   aniframe += keyframe.aniframe; // add aniframe</pre>
+	/**
+	 *  ]-inf,inf[ <pre>
+	 *  aniframe += keyframe.aniframe; // add aniframe</pre>
+	 */
 	TYPE_1,
-    /// - 2 - ]-inf,ROStrLayer.texturecount[ <pre>
-    ///   aniframe += keyframe.anidelta; // add anidelta
-    ///   if (aniframe >= ROStrLayer.texturecount) // stop on limit
-    ///     aniframe = ROStrLayer.texturecount - 1.0f;</pre>
+    /**
+     * ]-inf,ROStrLayer.texturecount[ <pre>
+     * aniframe += keyframe.anidelta; // add anidelta
+     * if (aniframe >= ROStrLayer.texturecount) // stop on limit
+     *   aniframe = ROStrLayer.texturecount - 1.0f;</pre>
+     */
 	TYPE_2,
-    /// - 3 - [0.0,ROStrLayer.texturecount[ <pre>
-    ///   aniframe += keyframe.anidelta; // add anidelta
-    ///   if (aniframe >= ROStrLayer.texturecount) // loop when over
-    ///     aniframe -= (float)(int)(aniframe / ROStrLayer.texturecount) * ROStrLayer.texturecount;</pre>
+    /**
+     * [0.0,ROStrLayer.texturecount[ <pre>
+     * aniframe += keyframe.anidelta; // add anidelta
+     * if (aniframe >= ROStrLayer.texturecount) // loop when over
+     *   aniframe -= (float)(int)(aniframe / ROStrLayer.texturecount) * ROStrLayer.texturecount;</pre>
+     */
 	TYPE_3,
-	/// - 4 - [0.0,ROStrLayer.texturecount[  WARNING broken on 2004 client <pre>
-    ///   aniframe -= keyframe.anidelta; // subtract anidelta
-    ///   if (aniframe < 0.0f) { // loop when under
-    ///     aniframe -= (float)(int)(aniframe / ROStrLayer.texturecount) * ROStrLayer.texturecount;
-    ///     if (aniframe < 0.0f)
-    ///       aniframe += ROStrLayer.texturecount;
-    ///   }</pre>
+	/**
+	 * [0.0,ROStrLayer.texturecount[  WARNING broken on 2004 client <pre>
+	 * aniframe -= keyframe.anidelta; // subtract anidelta
+	 * if (aniframe < 0.0f) { // loop when under
+	 *   aniframe -= (float)(int)(aniframe / ROStrLayer.texturecount) * ROStrLayer.texturecount;
+	 *   if (aniframe < 0.0f)
+	 *     aniframe += ROStrLayer.texturecount;
+	 * }</pre>
+	 */
 	TYPE_4,
-	/// - 5 - [0,ROStrLayer.texturecount - 1]  randomize with anidelta seed??? (TODO interpret) <pre>
-    ///   int value = (int)((curframe - keyframe.framenum) * keyframe.anidelta + aniframe);
-    ///   int lasttex = ROStrLayer.texturecount - 1;
-    ///   int n = value / lasttex;
-    ///   if (n & 1)
-    ///     aniframe = lasttex * (n + 1) - value;
-    ///   else
-    ///     aniframe = value - lasttex * n;</pre>
+	/**
+	 * [0,ROStrLayer.texturecount - 1]  randomize with anidelta seed??? (TODO interpret) <pre>
+	 * int value = (int)((curframe - keyframe.framenum) * keyframe.anidelta + aniframe);
+	 * int lasttex = ROStrLayer.texturecount - 1;
+	 * int n = value / lasttex;
+	 * if (n & 1)
+	 *   aniframe = lasttex * (n + 1) - value;
+	 * else
+	 *   aniframe = value - lasttex * n;</pre>
+	 */
 	TYPE_5;
-	
+
 	static AnimationType fromInt(int iMode)
 	{
 		switch(iMode) {

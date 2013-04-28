@@ -1,8 +1,7 @@
 package com.skardach.ro.resource;
 
-
 /**
- * Flyweight repository for loading textures.
+ * Fly-weight repository for loading textures.
  * Provides methods for opening textures.
  * @author Stanislaw Kardach
  *

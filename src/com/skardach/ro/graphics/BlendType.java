@@ -1,7 +1,11 @@
 package com.skardach.ro.graphics;
 
 import javax.media.opengl.GL;
-
+/**
+ * Blend type for OpenGL blend function
+ * @author Stanislaw Kardach
+ *
+ */
 public enum BlendType {
 	ZERO,
 	ONE,
@@ -16,7 +20,11 @@ public enum BlendType {
 	SRC_ALPHA_SAT,
 	BOTH_SRC_ALPHA,
 	BOTH_INV_SRC_ALPHA;
-
+	/**
+	 * Create enum from int
+	 * @param iType blend type as read from STR file.
+	 * @return Enum value based on the int
+	 */
 	public static BlendType fromInt(int iType) {
 		switch(iType) {
 		default:
@@ -36,7 +44,9 @@ public enum BlendType {
 		case 13: return BOTH_INV_SRC_ALPHA;
 		}
 	}
-
+	/**
+	 * @return Convert blend type enum to OpenGL identifier
+	 */
 	public int toGLValue() {
 		switch(this) {
 		default:

@@ -8,7 +8,10 @@ package com.skardach.ro.resource;
  */
 public class ResourceException extends Exception {
 	private static final long serialVersionUID = 2678539482454816082L;
-
+	/**
+	 * Default constructor with a custom error message.
+	 * @param string Error message to be passed to the Exception constructor.
+	 */
 	public ResourceException(String string) {
 		super(string);
 	}

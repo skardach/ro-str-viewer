@@ -19,13 +19,18 @@ import com.skardach.ro.resource.Texture;
  *
  */
 public class TextureImpl implements Texture {
-	public static final int NAME_SIZE = 128;
 	String _name;
 	String _path;
 	TextureData _data;
 	com.jogamp.opengl.util.texture.Texture _joglTexture;
 	Integer _GLName = null;
-
+	/**
+	 * Construct the texture with given relative path (name) and base path
+	 * @param iName Name of the texture, being the relative path to the
+	 * texture file.
+	 * @param iBasePath The base path to the texture. Along with texture name
+	 * it makes the full path to the texture file.
+	 */
 	public TextureImpl(String iName, String iBasePath) {
 		_name = iName;
 		_path = iBasePath;

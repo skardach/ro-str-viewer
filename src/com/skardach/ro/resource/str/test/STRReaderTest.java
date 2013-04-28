@@ -15,9 +15,15 @@ import com.skardach.ro.resource.ResourceManager;
 import com.skardach.ro.resource.str.Str;
 import com.skardach.ro.resource.str.StrReader;
 import com.skardach.ro.resource.str.StrReader.ParseException;
-
+/**
+ * Tests for STRReader class.
+ * @author Stanislaw Kardach
+ *
+ */
 public class STRReaderTest {
-
+	/**
+	 * Test reading empty stream
+	 */
 	@Test
 	public void testEmptyStream() {
 		StrReader sut = new StrReader();
@@ -42,7 +48,10 @@ public class STRReaderTest {
 			}
 		}
 	}
-
+	/**
+	 * Test whether reading a correct str file does not crash us.
+	 * FIXME: there should be a verification of the output at the end.
+	 */
 	@Test
 	public void testReadingCorrectFile() {
 		StrReader sut = new StrReader();
@@ -51,7 +60,7 @@ public class STRReaderTest {
 		try {
 			File f = new File("bin/com/skardach/ro/resource/str/test/res/arrowstorm/arrowstorm.str");
 			fis = new FileInputStream(f);
-			SimpleTextureManager stm = 
+			SimpleTextureManager stm =
 				new SimpleTextureManager(f.getAbsolutePath());
 			ResourceManager rm = new ResourceManager(stm);
 			Str result = sut.readFromStream(rm, fis);
@@ -72,12 +81,11 @@ public class STRReaderTest {
 			}
 		}
 	}
-	// 3. Mismatched magic: throw StrReader.ParseException 
+	// 3. Mismatched magic: throw StrReader.ParseException
 	// 4. Unsupported version: throw StrReader.ParseException
 	// 5. Framecount < 0: throw StrReader.ParseException
 	// 6. fps <= 0: read as default (60)
 	// 7. Layer count mismatch: throw StrReader.ParseException
-	// 8. Reserved bytes mismatched (TODO: is it needed?)
 	// 9. Texture count mismatch: throw StrReader.ParseException
 	// 10. Key frame count mismatch: throw StrReader.ParseException
 	// 11. Key frames in wrong order: stable sort them by framenum

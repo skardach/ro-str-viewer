@@ -26,7 +26,7 @@ public class Rectangle<TPoint> {
 	public final TPoint get_d() {
 		return _d;
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.format("[%s,%s,%s,%s]", _a, _b, _c, _d);

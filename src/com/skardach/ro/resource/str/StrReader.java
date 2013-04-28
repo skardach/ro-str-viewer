@@ -20,13 +20,29 @@ import com.skardach.ro.resource.TextureManager;
  */
 public class StrReader {
 	/**
+	 * First 4 bytes of the STR file to be checked when reading it.
+	 */
+	private static final byte MAGIC[] = {'S', 'T', 'R', 'M'};
+	private static final int SUPPORTED_VERSION = 148;
+	private static final int DEFAULT_FPS = 60;
+	private static final int TEXTURE_NAME_SIZE = 128;
+	/*
+	 * Maximum count of things. Unlike in roint implementation,
+	 * I do now use malloc to reserve space so I'm not bound by
+	 * size_t.
+	 */
+	private static final int MAX_LAYER_COUNT = Integer.MAX_VALUE;
+	/**
 	 * Thrown if parsing fails for some reason
 	 * @author Stanislaw Kardach
 	 *
 	 */
 	public class ParseException extends Exception {
 		private static final long serialVersionUID = 7050197797878645891L;
-
+		/**
+		 * Default constructor.
+		 * @param string Message
+		 */
 		public ParseException(String string) {
 			super(string);
 		}
@@ -58,24 +74,24 @@ public class StrReader {
 			int read = stream.read(magic);
 			if(read <= 0)
 				return null;
-			if(!Arrays.equals(magic, Str.MAGIC))
-				throw new ParseException(String.format("Invalid magic: [%s], expected: [%s]", Arrays.toString(magic), Arrays.toString(Str.MAGIC)));
+			if(!Arrays.equals(magic, MAGIC))
+				throw new ParseException(String.format("Invalid magic: [%s], expected: [%s]", Arrays.toString(magic), Arrays.toString(MAGIC)));
 			// XXX: reading of int should work because according to api docs
 			// readInt() should read 4 bytes and interpret them as an int.
 			result.set_version(stream.readInt());
-			if(result.get_version() != Str.SUPPORTED_VERSION)
+			if(result.get_version() != SUPPORTED_VERSION)
 				throw new ParseException(String.format("Unsupported version: 0x%X", result.get_version()));
 			result.set_frameCount(stream.readInt());
 			if(result.get_frameCount() < 0)
 				throw new ParseException("Framecount less than 0");
 			result.set_fps(stream.readInt());
 			if(result.get_fps() <= 0)
-				result.set_fps(Str.DEFAULT_FPS);
+				result.set_fps(DEFAULT_FPS);
 			// read layers
 			int layerCount = stream.readInt();
 			if(layerCount < 0)
 				throw new ParseException("Layer count < 0");
-			if(layerCount > Str.MAX_LAYER_COUNT)
+			if(layerCount > MAX_LAYER_COUNT)
 				throw new ParseException("Too many layers: " + layerCount);
 			read = stream.read(result.get_reserved());
 			if(read != Str.RESERVED_FIELD_SIZE)
@@ -122,15 +138,15 @@ public class StrReader {
 	 * @param stream Stream to read texture data from
 	 * @return Texture object
 	 * @throws IOException Stream read error.
-	 * @throws ResourceException Texture could not be opened/located. 
+	 * @throws ResourceException Texture could not be opened/located.
 	 */
 	private Texture readTexture(TextureManager textureManager,
 			LittleEndianInputStreamAdapter stream) throws IOException, ResourceException {
-		byte textureNameBuffer[] = new byte[Str.TEXTURE_NAME_SIZE];
+		byte textureNameBuffer[] = new byte[TEXTURE_NAME_SIZE];
 		stream.read(textureNameBuffer);
 		String textureName = // this should use UTF8
-			new String(textureNameBuffer, 0, Str.TEXTURE_NAME_SIZE).trim();
-		Texture texture = 
+			new String(textureNameBuffer, 0, TEXTURE_NAME_SIZE).trim();
+		Texture texture =
 			textureManager.getTexture(textureName);
 		if(texture == null) // if no such texture found
 			throw new ResourceException(
@@ -185,9 +201,9 @@ public class StrReader {
 		float dy = stream.readFloat();
 		keyFrame.set_drawingRectangle(
 			new Rectangle<Point2D>(
-				new Point2D(ax, ay), 
-				new Point2D(bx, by), 
-				new Point2D(cx, cy), 
+				new Point2D(ax, ay),
+				new Point2D(bx, by),
+				new Point2D(cx, cy),
 				new Point2D(dx, dy)));
 		keyFrame.set_textureId(stream.readFloat());
 		keyFrame.set_animationType(AnimationType.fromInt(stream.readInt()));
@@ -199,7 +215,7 @@ public class StrReader {
 		float b = stream.readFloat();
 		float alpha = stream.readFloat();
 		keyFrame.set_color(new Color(r, g, b, alpha));
-		keyFrame.set_sourceAlpha(BlendType.fromInt(stream.readInt()));
+		keyFrame.set_sourceBlend(BlendType.fromInt(stream.readInt()));
 		keyFrame.set_destAlpha(BlendType.fromInt(stream.readInt()));
 		keyFrame.set_multiTexturePreset(MultiTextureMode.fromInt(stream.readInt()));
 		return keyFrame;

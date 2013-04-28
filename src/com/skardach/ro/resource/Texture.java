@@ -13,23 +13,23 @@ public interface Texture {
 	 * Should return identifier of a texture. In RO this is
 	 * a path of the texture relative to the directory containing
 	 * rendered object.
+	 * @return texture name
 	 */
 	public String getName();
 	/**
-	 * Should return buffer with texture content of appropriate format.
-	 * @throws ResourceException If the is any problem with 
+	 * @return Should return buffer with texture content of appropriate format.
+	 * @throws ResourceException If the is any problem with
 	 * texture data. Implementations may choose to throw it i.e.
 	 * when they are delaying the texture  load to the first
 	 * access of texture data.
 	 */
 	public Buffer getData() throws ResourceException;
 	/**
-	 * Return texture width. Can be -1 if texture is not loaded.
+	 * @return Return texture width. Can be -1 if texture is not loaded.
 	 */
 	public int getWidth();
 	/**
-	 * Return texture height. Can be -1 if texture is not loaded,
-	 * @return
+	 * @return Return texture height. Can be -1 if texture is not loaded.
 	 */
 	public int getHeight();
 	/**
@@ -42,7 +42,7 @@ public interface Texture {
 	 * Load texture into memory in given OpenGL context.
 	 * @param iGLContext Context to which texture will be registered.
 	 * @throws ResourceException If something goes wrong, i.e. Data could not
-	 * be located on the drive or registration failed. 
+	 * be located on the drive or registration failed.
 	 */
 	public void load(GL2 iGLContext) throws ResourceException;
 	/**
@@ -52,12 +52,14 @@ public interface Texture {
 	 */
 	public void unload(GL2 iGLContext);
 	/**
-	 * Return true if texture data is loaded and can be bound to GL context.
+	 * @return Return true if texture data is loaded and can be bound to GL
+	 * context.
 	 */
 	public boolean isLoaded();
 	/**
 	 * Bind texture to given GL context
-	 * @return True if bound successfully, false otherwise.
+	 * @param iGLContext OpenGL context for binding the texture
+	 * @return True if bound successfully, false otherwise
 	 */
 	public boolean bind(GL2 iGLContext);
 }

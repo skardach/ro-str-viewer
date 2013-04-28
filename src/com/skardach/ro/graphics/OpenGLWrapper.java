@@ -3,6 +3,7 @@ package com.skardach.ro.graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL;
@@ -16,6 +17,7 @@ import javax.media.opengl.glu.GLU;
 
 import com.jogamp.common.util.IOUtil;
 import com.jogamp.opengl.util.FPSAnimator;
+import com.skardach.ro.resource.ResourceException;
 
 /**
  * OpenGL wrapper class which is used in business logic to separate it from the
@@ -33,12 +35,14 @@ public class OpenGLWrapper {
 	private int _pinkRemoverShaderId = 0;
 	private int _shaderProgramId = 0;
 
+	LinkedList<RendererHandler> _registeredRenderers =
+		new LinkedList<RendererHandler>();
+
 	// Settings. TODO: This should be configurable
 	private static class Settings {
 		public static final float CLIPPING_NEAR = 1.0f;
 		public static final float CLIPPING_FAR = 1000.0f;
 		public static final float PERSPECTIVE_ANGLE = 45.0f;
-		public static final int ANIMATOR_FPS = FPSAnimator.DEFAULT_FRAMES_PER_INTERVAL;
 	}
 
 	/**
@@ -64,7 +68,7 @@ public class OpenGLWrapper {
 
 		@Override
 		public void init(GLAutoDrawable drawable) {
-			initOpenGL(drawable);
+			initOpenGLInCanvas(drawable);
 		}
 
 		@Override
@@ -94,7 +98,7 @@ public class OpenGLWrapper {
 		 *
 		 * @param iX
 		 * @param iY
-		 * @return
+		 * @return angle based on a pitagorean triangle
 		 */
 		public double calculateCurrentAngle(int iX, int iY) {
 			double currentAngle = Math.PI / 2;
@@ -175,7 +179,6 @@ public class OpenGLWrapper {
 	 */
 	private class RendererHandler implements GLEventListener {
 		Renderer _renderer;
-		long _displayInvokeDelay = 0;
 		long _lastDisplayInvoke = 0;
 
 		public RendererHandler(Renderer iRenderer) {
@@ -184,13 +187,13 @@ public class OpenGLWrapper {
 
 		@Override
 		public void display(GLAutoDrawable drawable) {
-
+			long displayInvokeDelay = 0;
 			long last = _lastDisplayInvoke;
 			_lastDisplayInvoke = System.nanoTime() / 1000000; // get millisecond
 			if (last != 0)
-				_displayInvokeDelay = _lastDisplayInvoke - last;
+				displayInvokeDelay = _lastDisplayInvoke - last;
 			try {
-				_renderer.renderFrame(drawable, _displayInvokeDelay);
+				_renderer.renderFrame(drawable, displayInvokeDelay);
 			} catch (RenderException e) {
 				e.printStackTrace();
 			}
@@ -203,13 +206,28 @@ public class OpenGLWrapper {
 
 		@Override
 		public void init(GLAutoDrawable drawable) {
-			_renderer.initialize(drawable);
+			try {
+				_renderer.initialize(drawable);
+			} catch(ResourceException e) {
+				System.err.println(
+					"Unable to initialize renderer: "
+					+ e.getLocalizedMessage());
+			}
 		}
 
 		@Override
 		public void reshape(GLAutoDrawable drawable, int x, int y, int width,
 				int height) {
 			_renderer.handleReshape(drawable, x, y, width, height);
+		}
+
+		public void reset() {
+			_renderer.reset();
+			_lastDisplayInvoke = 0;
+		}
+
+		public void resetTimer() {
+			_lastDisplayInvoke = 0;
 		}
 	}
 
@@ -250,13 +268,14 @@ public class OpenGLWrapper {
 	 * to use in all canvas created by this wrapper.
 	 * @param iGraphicsProfile OpenGL profile to use. If null then
 	 * GLProfile.getDefault() is used.
+	 * @param iFps FPS of the animator used for Canvas created by this wrapper.
 	 */
-	public OpenGLWrapper(GLProfile iGraphicsProfile) {
+	public OpenGLWrapper(GLProfile iGraphicsProfile, int iFps) {
 		if (iGraphicsProfile != null)
 			_profile = iGraphicsProfile;
 		else
 			_profile = GLProfile.getDefault();
-		_animator = new FPSAnimator(Settings.ANIMATOR_FPS);
+		_animator = new FPSAnimator(iFps);
 	}
 
 	/**
@@ -285,14 +304,19 @@ public class OpenGLWrapper {
 		_animator.remove(ioCanvas);
 		ioCanvas.destroy();
 	}
-
+	/**
+	 * Global initialisation of OpenGL. Calls
+	 * {@link GLProfile#initSingleton(boolean)}.
+	 */
+	public static void initOpenGL() {
+		GLProfile.initSingleton(true);
+	}
 	/**
 	 * Initialize OpenGL in Canvas. Required for STRViewer. If reusing rendering
 	 * code for particular renderers, this should not be required.
 	 */
-	private void initOpenGL(GLAutoDrawable ioCanvas) {
+	private void initOpenGLInCanvas(GLAutoDrawable ioCanvas) {
 		_glu = new GLU();
-		System.out.println("INIT");
 		GL2 gl = ioCanvas.getGL().getGL2();
 		ioCanvas.setGL(new DebugGL2(gl));
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
@@ -389,20 +413,30 @@ public class OpenGLWrapper {
 	 */
 	public void stopAnimation() {
 		_animator.stop();
+		for(RendererHandler r : _registeredRenderers) {
+			r.resetTimer();
+		}
+	}
+	/**
+	 * Reset animation state.
+	 */
+	public void resetAnimation() {
+		for(RendererHandler r : _registeredRenderers) {
+			r.reset();
+		}
 	}
 
 	/**
-	 * Add given renderer to the rendering pipeline on a given canvas. TODO: Key
-	 * listener could be done differently since multiple {@link RendererHandler}
-	 * will make a mayhem trying to change the viewpoint.
+	 * Add given renderer to the rendering pipeline on a given canvas.
 	 *
-	 * @param iRenderer
-	 * @param ioCanvas
+	 * @param iRenderer Renderer to add
+	 * @param ioCanvas GLCanvas to register renderer to
 	 */
 	public void registerRendererOnCanvas(Renderer iRenderer, GLCanvas ioCanvas) {
 		if (iRenderer != null && ioCanvas != null) {
 			RendererHandler rh = new RendererHandler(iRenderer);
 			ioCanvas.addGLEventListener(rh);
+			_registeredRenderers.add(rh);
 		}
 	}
 
@@ -443,17 +477,17 @@ public class OpenGLWrapper {
 
 	/**
 	 * Create wrapper with a desktop profile.
+	 * @param iFps FPS for animator used on canvas created by this wrapper
 	 */
-	public static OpenGLWrapper createDesktopWrapper() {
-		return new OpenGLWrapper(GLProfile.get(GLProfile.GL2));
+	public static OpenGLWrapper createDesktopWrapper(int iFps) {
+		return new OpenGLWrapper(GLProfile.get(GLProfile.GL2), iFps);
 	}
 
 	/**
 	 * Create wrapper with mobile profile
-	 *
-	 * @return
+	 * @param iFps FPS for animator used on canvas created by this wrapper
 	 */
-	public static OpenGLWrapper createMobileWrapper() {
-		return new OpenGLWrapper(GLProfile.getGL2ES1());
+	public static OpenGLWrapper createMobileWrapper(int iFps) {
+		return new OpenGLWrapper(GLProfile.getGL2ES1(), iFps);
 	}
 }
