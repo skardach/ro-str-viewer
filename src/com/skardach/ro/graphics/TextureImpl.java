@@ -42,14 +42,12 @@ public class TextureImpl implements Texture {
 	}
 
 	public String toString(String iPrefix) {
-		return iPrefix
-			+ "Texture [_name="
-			+ _name
-			+ ", _path="
-			+ _path
-			+ ", _GLName="
-			+ _GLName
-			+ "]";
+		return
+			iPrefix + "<texture"
+			+ " _name=\"" + _name + "\""
+			+ " _path=\"" + _path + "\""
+			+ " _GLName=\"" + _GLName + "\""
+			+ " />";
 	}
 
 	@Override
@@ -105,7 +103,7 @@ public class TextureImpl implements Texture {
 			_joglTexture.setTexParameterf(
 				iGLContext,
 				GL.GL_TEXTURE_MAG_FILTER,
-				GL.GL_LINEAR);
+				GL.GL_NEAREST);
 			iGLContext.glTexEnvf(
 				GL2.GL_TEXTURE_ENV,
 				GL2.GL_TEXTURE_ENV_MODE,

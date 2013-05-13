@@ -81,12 +81,12 @@ public class StrReader {
 			result.set_version(stream.readInt());
 			if(result.get_version() != SUPPORTED_VERSION)
 				throw new ParseException(String.format("Unsupported version: 0x%X", result.get_version()));
-			result.set_frameCount(stream.readInt());
-			if(result.get_frameCount() < 0)
-				throw new ParseException("Framecount less than 0");
 			result.set_fps(stream.readInt());
 			if(result.get_fps() <= 0)
 				result.set_fps(DEFAULT_FPS);
+			result.set_frameCount(stream.readInt());
+			if(result.get_frameCount() < 0)
+				throw new ParseException("Framecount less than 0");
 			// read layers
 			int layerCount = stream.readInt();
 			if(layerCount < 0)
@@ -175,9 +175,9 @@ public class StrReader {
 		keyFrame.set_textureUVMapping(
 			new Rectangle<Point2D>(
 				new Point2D(u, v),
-				new Point2D(u+us,v),
-				new Point2D(u,v+vs),
-				new Point2D(u+us,v+vs)));
+				new Point2D(us,v),
+				new Point2D(u,vs),
+				new Point2D(us,vs)));
 		u = stream.readFloat();
 		v = stream.readFloat();
 		us = stream.readFloat();
@@ -185,9 +185,9 @@ public class StrReader {
 		keyFrame.set_textureUVMapping2(
 			new Rectangle<Point2D>(
 				new Point2D(u, v),
-				new Point2D(u+us,v),
-				new Point2D(u,v+vs),
-				new Point2D(u+us,v+vs)));
+				new Point2D(us,v),
+				new Point2D(u,vs),
+				new Point2D(us,vs)));
 		// Rectangle corners' coordinates
 		// x coordinates first
 		float ax = stream.readFloat();

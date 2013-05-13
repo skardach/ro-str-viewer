@@ -228,22 +228,22 @@ public class KeyFrame {
 	 */
 	public String toString(String iPrefix) {
 		return
-			iPrefix + "KeyFrame [\n"+
-			iPrefix + "  _framenum=" + _framenum + ",\n"+
-			iPrefix + "  _frameType=" + _frameType + ",\n"+
-			iPrefix + "  _position=" + _position + ",\n"+
-			iPrefix + "  _textureUVMapping=" + _textureUVMapping + ",\n"+
-			iPrefix + "  _textureUVMapping2=" + _textureUVMapping2 + ",\n"+
-			iPrefix + "  _drawingRectangle=" + _drawingRectangle + ",\n"+
-			iPrefix + "  _textureId=" + _textureId + ",\n"+
-			iPrefix + "  _animationType=" + _animationType + ",\n"+
-			iPrefix + "  _animationDelta=" + _animationDelta + ",\n"+
-			iPrefix + "  _rotation=" + _rotation + ",\n"+
-			iPrefix + "  _color=" + _color + ",\n"+
-			iPrefix + "  _sourceBlend=" + _sourceBlend + ",\n"+
-			iPrefix + "  _destBlend=" + _destBlend + ",\n"+
-			iPrefix + "  _multiTexturePreset=" + _multiTexturePreset + "\n"+
-			iPrefix + "]";
+			iPrefix + "<keyFrame "
+			+ " _framenum=\"" + _framenum + "\""
+			+ " _frameType=\"" + _frameType + "\""
+			+ " _position=\"" + _position + "\""
+			+ " _textureUVMapping=\"" + _textureUVMapping + "\""
+			+ " _textureUVMapping2=\"" + _textureUVMapping2 + "\""
+			+ " _drawingRectangle=\"" + _drawingRectangle + "\""
+			+ " _textureId=\"" + _textureId + "\""
+			+ " _animationType=\"" + _animationType + "\""
+			+ " _animationDelta=\"" + _animationDelta + "\""
+			+ " _rotation=\"" + _rotation + "\""
+			+ " _color=\"" + _color + "\""
+			+ " _sourceBlend=\"" + _sourceBlend + "\""
+			+ " _destBlend=\"" + _destBlend + "\""
+			+ " _multiTexturePreset=\"" + _multiTexturePreset + "\""
+			+ " />";
 	}
 
 }

@@ -55,10 +55,10 @@ public class OpenGLWrapper {
 	 */
 	private class CanvasEventHandler implements GLEventListener, KeyListener {
 		int _eyeX = 0;
-		int _eyeY = 0;
-		int _eyeZ = 700;
+		int _eyeY = -100;
+		int _eyeZ = 600;
 		int _centerX = 0;
-		int _centerY = 0;
+		int _centerY = -100;
 		int _centerZ = 0;
 
 		@Override
@@ -93,29 +93,8 @@ public class OpenGLWrapper {
 		public void keyTyped(KeyEvent e) {
 		}
 
-		/**
-		 * Calculates angle from two sides of a right triangle.
-		 *
-		 * @param iX
-		 * @param iY
-		 * @return angle based on a pitagorean triangle
-		 */
-		public double calculateCurrentAngle(int iX, int iY) {
-			double currentAngle = Math.PI / 2;
-			if (iY == 0)
-				iY = 1;
-			currentAngle = Math.atan((double) iX / (double) iY);
-			return currentAngle;
-		}
-
-		/**
-		 * This should move the eye of the camera based on the key pressed. It
-		 * does so up to a certain extent... needs fixing.
-		 */
 		@Override
 		public void keyPressed(KeyEvent e) {
-			// TODO: this is VERY crude...
-			double deltaAngle = Math.PI / 18.0; // 10 degrees
 			switch (e.getKeyCode()) {
 			case (KeyEvent.VK_W):
 				_eyeY -= 10;
@@ -138,30 +117,6 @@ public class OpenGLWrapper {
 				break;
 			case (KeyEvent.VK_E):
 				_eyeZ += 10;
-				break;
-			case (KeyEvent.VK_LEFT):
-				double currentAngle = calculateCurrentAngle(_eyeX, _eyeZ);
-				double r = Math.sqrt(_eyeX * _eyeX + _eyeY * _eyeY);
-				_eyeX = (int) (Math.sin(currentAngle - deltaAngle) * r);
-				_eyeY = (int) (Math.cos(currentAngle - deltaAngle) * r);
-				break;
-			case (KeyEvent.VK_RIGHT):
-				currentAngle = calculateCurrentAngle(_eyeX, _eyeZ);
-				r = Math.sqrt(_eyeX * _eyeX + _eyeY * _eyeY);
-				_eyeX = (int) (Math.sin(currentAngle + deltaAngle) * r);
-				_eyeY = (int) (Math.cos(currentAngle + deltaAngle) * r);
-				break;
-			case (KeyEvent.VK_UP):
-				currentAngle = calculateCurrentAngle(_eyeZ, _eyeY);
-				r = Math.sqrt(_eyeZ * _eyeZ + _eyeY * _eyeY);
-				_eyeZ = (int) (Math.sin(currentAngle - deltaAngle) * r);
-				_eyeY = (int) (Math.cos(currentAngle - deltaAngle) * r);
-				break;
-			case (KeyEvent.VK_DOWN):
-				currentAngle = calculateCurrentAngle(_eyeZ, _eyeY);
-				r = Math.sqrt(_eyeZ * _eyeZ + _eyeY * _eyeY);
-				_eyeZ = (int) (Math.sin(currentAngle + deltaAngle) * r);
-				_eyeY = (int) (Math.cos(currentAngle + deltaAngle) * r);
 				break;
 			}
 		}
@@ -223,7 +178,7 @@ public class OpenGLWrapper {
 
 		public void reset() {
 			_renderer.reset();
-			_lastDisplayInvoke = 0;
+			resetTimer();
 		}
 
 		public void resetTimer() {

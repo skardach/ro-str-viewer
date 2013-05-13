@@ -7,6 +7,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 
+import com.skardach.ro.common.ObjectHolder;
 import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.Texture;
 import com.skardach.ro.resource.str.KeyFrame;
@@ -38,8 +39,8 @@ public class SimpleStrRenderer implements Renderer {
 	float _yScale;
 	float _zScale;
 	// rendering helper objects and variables
-	FrameAdvanceCalculator _frameAdvanceCalculator = null;
-	int _lastRenderedFrame = FrameAdvanceCalculator.NO_FRAME;
+	protected FrameAdvanceCalculator _frameAdvanceCalculator = null;
+	protected int _lastRenderedFrame = FrameAdvanceCalculator.NO_FRAME;
 	/**
 	 * Keeps track of which base frame should be a base for rendering for given
 	 * layer. i.e. If current frame is 35 and on layer x there is a base frame
@@ -47,14 +48,14 @@ public class SimpleStrRenderer implements Renderer {
 	 * frame is 40 and there were no base frames on layer x with numbers
 	 * between 36-40 then still _currentBaseFrameOnLayer[x] == 35.
 	 */
-	int _currentBaseFrameOnLayer[];
+	protected int _currentBaseFrameOnLayer[];
 	/**
 	 * Keeps track of which animation frame should be applied when rendering
 	 * given layer. The idea behind this table is the same as with
 	 * _currentBaseFrameOnLayer but instead of base frames, it keeps track of
 	 * animation frames.
 	 */
-	int _currentAnimationFrameOnLayer[];
+	protected int _currentAnimationFrameOnLayer[];
 	/**
 	 * Create a simple implementation of Effect renderer. It is based on
 	 * open-raganrok implementation
@@ -131,7 +132,7 @@ public class SimpleStrRenderer implements Renderer {
 	 * renderer settings.
 	 * @param iGL GL context
 	 */
-	private void beforeRender(GL2 iGL) {
+	protected void beforeRender(GL2 iGL) {
 		iGL.glPushMatrix();
 		iGL.glTranslatef(
 			_renderPosition._x,
@@ -147,7 +148,7 @@ public class SimpleStrRenderer implements Renderer {
 	 * Restore original matrix.
 	 * @param iGL GL context
 	 */
-	private void afterRender(GL2 iGL) {
+	protected void afterRender(GL2 iGL) {
 		iGL.glDisable(GL.GL_TEXTURE_2D);
 		iGL.glPopMatrix();
 	}
@@ -160,7 +161,7 @@ public class SimpleStrRenderer implements Renderer {
 	 * @throws RenderException If something goes wrong with rendering (GL
 	 * error, improper texture, etc.).
 	 */
-	private void render(
+	protected void render(
 			GL2 iGL,
 			long iDelaySinceLastInvoke) throws RenderException {
 		// few assertion to be sure we're sane
@@ -223,8 +224,9 @@ public class SimpleStrRenderer implements Renderer {
 						new Point2D( // translate by character size
 							baseFrame.get_position()._x - 320,
 							baseFrame.get_position()._y - 290);
-				float finalRotation =
-						baseFrame.get_rotation() / STR_ANGLE_TO_DEGREES;
+				ObjectHolder<Float> finalRotation =
+					new ObjectHolder<Float>(
+						baseFrame.get_rotation() / STR_ANGLE_TO_DEGREES);
 				Rectangle<Point2D> finalRectangle =
 					new Rectangle<Point2D>(
 						new Point2D(baseFrame.get_drawingRectangle().get_a()),
@@ -261,8 +263,8 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glTranslatef(
 					finalPosition._x,
 					finalPosition._y,
-					-0.5f); // 50 layers max?
-				iGL.glRotatef(finalRotation, 0, 0, 1);
+					-0.5f);
+				iGL.glRotatef(finalRotation.getObject(), 0, 0, 1);
 
 				iGL.glBlendFunc(
 						baseFrame.get_sourceBlend().toGLValue(),
@@ -294,7 +296,7 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glVertex3f(
 					finalRectangle._c._x,
 					finalRectangle._c._y,
-					0.01f * iLayerNumber);
+					0.02f * iLayerNumber);
 
 				iGL.glTexCoord2f(
 					finalTextureMapping._c._x,
@@ -302,7 +304,7 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glVertex3f(
 					finalRectangle._d._x,
 					finalRectangle._d._y,
-					0.01f * iLayerNumber);
+					0.02f * iLayerNumber);
 
 				iGL.glTexCoord2f(
 					finalTextureMapping._a._x,
@@ -310,7 +312,7 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glVertex3f(
 					finalRectangle._a._x,
 					finalRectangle._a._y,
-					0.01f * iLayerNumber);
+					0.02f * iLayerNumber);
 
 				iGL.glTexCoord2f(
 					finalTextureMapping._b._x,
@@ -318,7 +320,7 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glVertex3f(
 					finalRectangle._b._x,
 					finalRectangle._b._y,
-					0.01f * iLayerNumber);
+					0.02f * iLayerNumber);
 				iGL.glEnd();
 
 				iGL.glColorMask(true, true, true, true);
@@ -376,7 +378,7 @@ public class SimpleStrRenderer implements Renderer {
 	 */
 	private void applyAnimationFrame(KeyFrame iAnimationFrame,
 			int iFrameToRender, Color ioFinalColor, Point2D ioFinalPosition,
-			float ioFinalRotation, Rectangle<Point2D> ioFinalRectangle,
+			ObjectHolder<Float> ioFinalRotation, Rectangle<Point2D> ioFinalRectangle,
 			Rectangle<Point2D> ioFinalTextureMapping) {
 		int anifactor =
 			iFrameToRender - iAnimationFrame.get_framenum();
@@ -389,9 +391,9 @@ public class SimpleStrRenderer implements Renderer {
 			iAnimationFrame.get_position()._x * anifactor;
 		ioFinalPosition._y +=
 				iAnimationFrame.get_position()._y * anifactor;
-		ioFinalRotation +=
-			(iAnimationFrame.get_rotation() / STR_ANGLE_TO_DEGREES)
-			* anifactor;
+		ioFinalRotation.setObject(ioFinalRotation.getObject()
+			+ ((iAnimationFrame.get_rotation() / STR_ANGLE_TO_DEGREES)
+				* anifactor));
 		ioFinalRectangle._a._x +=
 				iAnimationFrame.get_drawingRectangle()._a._x
 				* anifactor;
@@ -453,6 +455,7 @@ public class SimpleStrRenderer implements Renderer {
 			int iLayerNumber,
 			List<KeyFrame> iLayerFrames,
 			int iFrameToRender) throws RenderException {
+		boolean found = false;
 		// First check if current frame to render is a base or animation
 		// frame on this layer.
 		for(
@@ -466,9 +469,7 @@ public class SimpleStrRenderer implements Renderer {
 					// frame will be the best place to start search
 						: _currentBaseFrameOnLayer[iLayerNumber]);
 				frameIdx < iLayerFrames.size() // look until the end...
-					&& iFrameToRender // or we pass the current frame number
-						<= iLayerFrames.get(frameIdx).get_framenum();
-				frameIdx++) {
+				; frameIdx++) {
 			KeyFrame kf = iLayerFrames.get(frameIdx);
 			if(kf.get_framenum() == iFrameToRender) {
 				if(kf.get_frameType() == KeyFrameType.BASIC) {
@@ -477,13 +478,13 @@ public class SimpleStrRenderer implements Renderer {
 					_currentBaseFrameOnLayer[iLayerNumber] = frameIdx;
 					_currentAnimationFrameOnLayer[iLayerNumber] =
 						FrameAdvanceCalculator.NO_FRAME;
-					break;
+					found = true;
 				} else if (kf.get_frameType() == KeyFrameType.MORPH) {
 					// We got a new animation frame so set it to apply
 					// to the basic frame that will be processed.
 					_currentAnimationFrameOnLayer[iLayerNumber] =
 							frameIdx;
-					break;
+					found = true;
 				} else {
 					throw new RenderException(
 						"Unknown frame type "
@@ -491,7 +492,17 @@ public class SimpleStrRenderer implements Renderer {
 						+ "cannot render");
 				}
 			}
+			else if(kf.get_framenum() > iFrameToRender) {
+				break;
+			}
 		}
+		if(!found
+			&& _currentAnimationFrameOnLayer[iLayerNumber]
+				== FrameAdvanceCalculator.NO_FRAME
+			&& _currentBaseFrameOnLayer[iLayerNumber]
+				== iLayerFrames.size() - 1)
+			_currentBaseFrameOnLayer[iLayerNumber] =
+				FrameAdvanceCalculator.NO_FRAME;
 	}
 
 	@Override

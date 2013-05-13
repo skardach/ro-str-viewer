@@ -9,7 +9,7 @@ public class StepCalculator implements FrameAdvanceCalculator {
 	@Override
 	public int calculateFrameToRender(long iDelaySinceLastInvoke,
 			int iLastRenderedFrame) {
-		return iLastRenderedFrame+1;
+		return iLastRenderedFrame + (iDelaySinceLastInvoke > 0 ? 1 : 0);
 	}
 
 }

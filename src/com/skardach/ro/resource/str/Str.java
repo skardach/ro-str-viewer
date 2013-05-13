@@ -76,20 +76,18 @@ public class Str {
 	 */
 	public String toString(String iPrefix) {
 		String result =
-			iPrefix + "Str [\n"+
-			iPrefix + "  _version=" + _version + ",\n"+
-			iPrefix + "  _frameCount=" + _frameCount + ",\n"+
-			iPrefix + "  _fps=" + _fps + ",\n"+
-			iPrefix + "  _reserved=" + Arrays.toString(_reserved) + ",\n"+
-			iPrefix + "  _layers= [\n";
-		int i = 1;
+			iPrefix + "<str "
+			+ " _version=\"" + _version + "\""
+			+ " _frameCount=\"" + _frameCount + "\""
+			+ " _fps=\"" + _fps + "\""
+			+ " _reserved=\"" + Arrays.toString(_reserved) + "\">\n"
+			+ iPrefix + "  <_layers>\n";
 		for(Layer l : _layers)
 		{
-			result += l.toString(iPrefix + "    "+i+":") + "\n";
-			i++;
+			result += l.toString(iPrefix + "    ") + "\n";
 		}
-		result += iPrefix + "  ]\n";
-		result += iPrefix + "]";
+		result += iPrefix + "  </_layers>\n";
+		result += iPrefix + "</str>";
 		return result;
 	}
 

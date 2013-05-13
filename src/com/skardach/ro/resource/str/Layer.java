@@ -50,18 +50,18 @@ public class Layer {
 	 * @return String representation
 	 */
 	public String toString(String iPrefix) {
-		String result = iPrefix + "Layer [\n"
-			+ iPrefix + "  _textures=[\n";
+		String result = iPrefix + "<layer>\n"
+			+ iPrefix + "  <_textures>\n";
 		for(Texture t : _textures)
 			result += t.toString(iPrefix + "    ") + "\n";
 
-		result += iPrefix + "  ],\n"
-			+ iPrefix + "  _keyFrames=[\n";
+		result += iPrefix + "  </_textures>\n"
+			+ iPrefix + "  <_keyFrames>\n";
 		for(KeyFrame kf : _keyFrames)
 			result += kf.toString(iPrefix + "    ") + "\n";
 
-		result += iPrefix + "  ]\n";
-		result += iPrefix + "]";
+		result += iPrefix + "  </_keyFrames>\n";
+		result += iPrefix + "</layer>";
 		return result;
 	}
 }

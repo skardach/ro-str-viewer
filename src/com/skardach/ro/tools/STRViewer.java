@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import com.jogamp.opengl.util.FPSAnimator;
 import com.skardach.ro.graphics.OpenGLWrapper;
 import com.skardach.ro.graphics.Point3D;
 import com.skardach.ro.graphics.RenderException;
@@ -46,6 +47,7 @@ public class STRViewer extends JFrame {
 	 * scale. This might be set somewhere else if this viewer is ever extended.
 	 */
 	private static final class Settings {
+		public static final String WINDOW_TITLE = "STRViewer";
 		public static final Point3D EFFECT_POSITION = new Point3D(0, 0, 0);
 		public static final float EFFECT_ROTATION_X = 0f;
 		public static final float EFFECT_ROTATION_Y = 0f;
@@ -53,6 +55,7 @@ public class STRViewer extends JFrame {
 		public static final float EFFECT_SCALE_X = 1f;
 		public static final float EFFECT_SCALE_Y = 1f;
 		public static final float EFFECT_SCALE_Z = 1f;
+		public static final int FPS = FPSAnimator.DEFAULT_FRAMES_PER_INTERVAL;
 	}
 	// OpenGL settings wrapper
 	OpenGLWrapper _glWrapper;
@@ -80,53 +83,76 @@ public class STRViewer extends JFrame {
 	 * Construct the viewer window.
 	 */
 	public STRViewer() {
-		setTitle("STRViewer");
+		setTitle(Settings.WINDOW_TITLE);
 		getContentPane().setLayout(new GridLayout(2, 1));
-		_glWrapper = OpenGLWrapper.createDesktopWrapper(60);
+		_glWrapper = OpenGLWrapper.createDesktopWrapper(Settings.FPS);
 		// OpenGL canvas
 		_canvas = _glWrapper.createGLCanvasWithAnimator();
 		add(_canvas);
 		// Add text area
 		_infoArea = new JTextArea();
+		_infoArea.setDoubleBuffered(true);
 		_infoArea.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(_infoArea);
+		scrollPane.setDoubleBuffered(true);
 		JPanel panel = new JPanel(true);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 		panel.add(scrollPane);
 		// vertical stack panel for start/stop, pause/resume buttons
 		JPanel buttonPanel = new JPanel(true);
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-		Button startStopAnimationButton = new Button("Start");
+		final Button stepButton = new Button("Step");
+		stepButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				_canvas.display();
+			}
+		});
+		final Button resetButton = new Button("Reset");
+		resetButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				_glWrapper.resetAnimation();
+				_canvas.display();
+			}
+		});
+		final Button startStopAnimationButton = new Button("Start");
 		startStopAnimationButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Button b = (Button)e.getSource();
 				if(b.getLabel() == "Start") { // TODO: this could be a state
+					stepButton.setEnabled(false);
 					_glWrapper.resetAnimation();
 					_glWrapper.startAnimation();
 					b.setLabel("Stop");
 				} else {
 					_glWrapper.stopAnimation();
 					b.setLabel("Start");
+					stepButton.setEnabled(true);
 				}
 			}
 		});
-		Button pauseResumeAnimationButton = new Button("Pause");
+		final Button pauseResumeAnimationButton = new Button("Pause");
 		pauseResumeAnimationButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Button b = (Button)e.getSource();
 				if(b.getLabel() == "Pause") { // TODO: this could be a state
 					_glWrapper.stopAnimation();
+					stepButton.setEnabled(true);
 					b.setLabel("Resume");
 				} else {
 					_glWrapper.startAnimation();
 					b.setLabel("Pause");
+					stepButton.setEnabled(false);
 				}
 			}
 		});
 		buttonPanel.add(startStopAnimationButton);
 		buttonPanel.add(pauseResumeAnimationButton);
+		buttonPanel.add(stepButton);
+		buttonPanel.add(resetButton);
 		panel.add(buttonPanel);
 		getContentPane().add(panel);
 
@@ -145,6 +171,7 @@ public class STRViewer extends JFrame {
 	private void start() {
 		// Choose STR
 		File strFile = chooseFile();
+		//File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/aspersio.str");
 		if(strFile != null) {
 			try {
 				// Read STR
@@ -158,6 +185,7 @@ public class STRViewer extends JFrame {
 				{
 					// fill in the STR details
 					_infoArea.setText(effect.toString());
+					setTitle(Settings.WINDOW_TITLE + " - " + strFile);
 					// Initialise OpenGL
 					// Prepare rendering objects
 					Renderer renderer =
@@ -170,8 +198,9 @@ public class STRViewer extends JFrame {
 							Settings.EFFECT_SCALE_X,
 							Settings.EFFECT_SCALE_Y,
 							Settings.EFFECT_SCALE_Z,
-							60,
-							true);
+							effect.get_fps(),
+							true,
+							false);
 					// Pre-load textures
 					_glWrapper.registerRendererOnCanvas(renderer, _canvas);
 					// Display everything
