@@ -45,8 +45,8 @@ public class STRRendererFactory {
 			boolean iDebug) throws RenderException {
 		assert(iEffect != null);
 		FrameAdvanceCalculator calc =
-				//new StepCalculator();
-				new DelayBasedFPSFrameAdvanceCalculator(iFps);
+				new StepCalculator();
+				//new DelayBasedFPSFrameAdvanceCalculator(iFps);
 		if(iDebug)
 			return new DebugSimpleStrRenderer(
 				iEffect,

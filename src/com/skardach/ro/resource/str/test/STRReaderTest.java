@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.ResourceManager;
+import com.skardach.ro.resource.SimpleTextureManager;
 import com.skardach.ro.resource.str.Str;
 import com.skardach.ro.resource.str.StrReader;
 import com.skardach.ro.resource.str.StrReader.ParseException;
