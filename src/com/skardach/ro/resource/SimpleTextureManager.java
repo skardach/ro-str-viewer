@@ -10,16 +10,20 @@ import java.util.HashMap;
  *
  */
 public class SimpleTextureManager implements TextureManager {
-	String _textureBaseDir;
-	HashMap<String, Texture> _textures = new HashMap<String, Texture>();
+	private String _textureBaseDir;
+	private HashMap<String, Texture> _textures = new HashMap<String, Texture>();
+	private boolean _convertMagenta;
 	/**
 	 * Creates a new instance of SimpleTextureManager. All textures are
 	 * created relative to the base path given.
 	 * @param iBasePath Base path to prepend to all textures retrieved from
 	 * this texture manager.
+	 * @param iTexturesConvertMagenta Should created textures convert the
+	 * magenta color to alpha when alpha is missing.
 	 */
-	public SimpleTextureManager(String iBasePath) {
+	public SimpleTextureManager(String iBasePath, boolean iTexturesConvertMagenta) {
 		_textureBaseDir = iBasePath;
+		_convertMagenta = iTexturesConvertMagenta;
 	}
 
 	@Override
@@ -30,7 +34,10 @@ public class SimpleTextureManager implements TextureManager {
 			result = _textures.get(iTextureName);
 			if(result == null)
 			{
-				result = new TextureImpl(iTextureName, _textureBaseDir);
+				result = new TextureImpl(
+					iTextureName,
+					_textureBaseDir,
+					_convertMagenta);
 				_textures.put(iTextureName, result);
 			}
 		}

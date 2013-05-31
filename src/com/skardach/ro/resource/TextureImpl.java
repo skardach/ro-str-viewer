@@ -24,16 +24,26 @@ public class TextureImpl implements Texture {
 	TextureData _data;
 	com.jogamp.opengl.util.texture.Texture _joglTexture;
 	Integer _GLName = null;
+	private boolean _convertMagenta;
 	/**
 	 * Construct the texture with given relative path (name) and base path
 	 * @param iName Name of the texture, being the relative path to the
 	 * texture file.
 	 * @param iBasePath The base path to the texture. Along with texture name
 	 * it makes the full path to the texture file.
+	 * @param iConvertMagenta If true then upon loading the colors with
+	 * magenta part larger than 0.7 will be converted to alpha if the texture
+	 * color model is RGB or BGR (without alpha). Currently only byte sized
+	 * color elements are supported. The conversion process will only occur if
+	 * the first pixel of the texture is full magenta ([1,0,1] in RGB).
 	 */
-	public TextureImpl(String iName, String iBasePath) {
+	public TextureImpl(
+			String iName,
+			String iBasePath,
+			boolean iConvertMagenta) {
 		_name = iName;
 		_path = iBasePath;
+		_convertMagenta = iConvertMagenta;
 	}
 
 	@Override
@@ -88,71 +98,10 @@ public class TextureImpl implements Texture {
 				false,
 				extension);
 			if(_data == null)
-				throw new ResourceException("Could not read texture " + _name);
-			int pixelType = _data.getPixelType();
-			int pixelFormat = _data.getPixelFormat();
-			if((pixelFormat == GL.GL_RGB // only support conversion from RGB
-					|| pixelFormat == GL2.GL_BGR) // and BGR format now
-				&& pixelType == GL.GL_UNSIGNED_BYTE
-				&& _data.getBuffer() instanceof ByteBuffer) {
-				ByteBuffer old = (ByteBuffer) _data.getBuffer();
-				byte pixel[] = new byte[4];
-				try {
-					old.get(pixel, 0, 3);
-					// normalize rgb parts
-					float r = (0xFF & pixel[0])/255f;
-					float g = (0xFF & pixel[1])/255f;
-					float b = (0xFF & pixel[2])/255f;
-					// get magenta color (pink)
-					float k = 1f - Math.max(Math.max(r, g), b);
-					float m = (1-g-k)/(1-k);
-					if(pixel[0] == -1
-						&& pixel[1] == 0
-						&& pixel[2] == -1) { // pink on first pixel so convert
-						ByteBuffer converted =
-							ByteBuffer.allocate(
-								_data.getWidth()
-								* _data.getHeight() // number of pixels
-								* 4); // and 4 components per pixel (RGBA/BGRA)
-						pixel[3] = 0;
-						converted.put(pixel);
-						while(old.position() < old.capacity()) {
-							old.get(pixel, 0, 3);
-							// normalize rgb parts
-							r = (0xFF & pixel[0])/255f;
-							g = (0xFF & pixel[1])/255f;
-							b = (0xFF & pixel[2])/255f;
-							// get magenta color (pink)
-							k = 1f - Math.max(Math.max(r, g), b);
-							m = (1-g-k)/(1-k);
-							if(m > 0.7) {
-								pixel[3] = (byte) (-1*(1-m+0.1));
-							} else { // max alpha otherwise
-								pixel[3] = -1;
-							}
-							converted.put(pixel);
-						}
-						converted.rewind();
-						_data = new TextureData(
-							_data.getGLProfile(),
-							4,
-							_data.getWidth(),
-							_data.getHeight(),
-							_data.getBorder(),
-							pixelFormat == GL.GL_RGB ? GL.GL_RGBA : GL2.GL_BGRA,
-							_data.getPixelType(),
-							_data.getMipmap(),
-							_data.isDataCompressed(),
-							_data.getMustFlipVertically(),
-							converted, null);
-					} else {
-						old.rewind();
-					}
-				} catch(BufferUnderflowException e) {
-					throw new ResourceException(
-						"Could not add alpha channel to texture, error reading texture buffer");
-				}
-			}
+				throw new ResourceException(
+					"Could not read texture " + _name);
+			if(_convertMagenta)
+				convertMagentaToAlphaIfNeeded();
 			// create the texture
 			_joglTexture = TextureIO.newTexture(_data);
 			// set some parameters
@@ -180,6 +129,88 @@ public class TextureImpl implements Texture {
 				+ _name
 				+ ". Reason: "
 				+ e);
+		}
+	}
+
+	/**
+	 * This method will convert all the colors close to magenta (with magenta
+	 * component larger than 0.7) to alpha depending on their distance from
+	 * magenta (alpha = 1.0-magenta).
+	 * Current implementation supports only byte sized color components in
+	 * both RGB and BGR (since the order makes no difference for magenta
+	 * component extraction as it depends on green color).
+	 * @throws ResourceException If there was a problem with reading the
+	 * texture data or creating the converted data.
+	 */
+	private void convertMagentaToAlphaIfNeeded()
+			throws ResourceException {
+		int pixelType = _data.getPixelType();
+		int pixelFormat = _data.getPixelFormat();
+		if((pixelFormat == GL.GL_RGB // only support conversion from RGB
+				|| pixelFormat == GL2.GL_BGR) // and BGR format now
+			&& pixelType == GL.GL_UNSIGNED_BYTE
+			&& _data.getBuffer() instanceof ByteBuffer) {
+			ByteBuffer old = (ByteBuffer) _data.getBuffer();
+			byte pixel[] = new byte[4];
+			try {
+				old.get(pixel, 0, 3);
+				// normalize rgb parts
+				float r = (0xFF & pixel[0])/255f;
+				float g = (0xFF & pixel[1])/255f;
+				float b = (0xFF & pixel[2])/255f;
+				// get magenta color (pink)
+				float k = 1f - Math.max(Math.max(r, g), b);
+				float m = (1-g-k)/(1-k);
+				if(pixel[0] == -1
+					&& pixel[1] == 0
+					&& pixel[2] == -1) { // pink on first pixel so convert
+					ByteBuffer converted =
+						ByteBuffer.allocate(
+							_data.getWidth()
+							* _data.getHeight() // number of pixels
+							* 4); // and 4 components per pixel (RGBA/BGRA)
+					pixel[3] = 0;
+					converted.put(pixel);
+					while(old.position() < old.capacity()) {
+						old.get(pixel, 0, 3);
+						// normalize rgb parts
+						r = (0xFF & pixel[0])/255f;
+						g = (0xFF & pixel[1])/255f;
+						b = (0xFF & pixel[2])/255f;
+						// get magenta color (pink)
+						k = 1f - Math.max(Math.max(r, g), b);
+						m = (1-g-k)/(1-k);
+						if(m > 0.75) {
+							pixel[3] = (byte) (-1*(1-m));
+						} else { // max alpha otherwise
+							pixel[3] = -1;
+						}
+						converted.put(pixel);
+					}
+					converted.rewind();
+					_data = new TextureData(
+						_data.getGLProfile(),
+						4,
+						_data.getWidth(),
+						_data.getHeight(),
+						_data.getBorder(),
+						pixelFormat == GL.GL_RGB ? GL.GL_RGBA : GL2.GL_BGRA,
+						_data.getPixelType(),
+						_data.getMipmap(),
+						_data.isDataCompressed(),
+						_data.getMustFlipVertically(),
+						converted, null);
+				} else {
+					old.rewind();
+				}
+			} catch(IllegalArgumentException e) {
+				throw new ResourceException(
+					"Could not add alpha channel to texture, error creating updated texture");
+			}
+			catch(BufferUnderflowException e) {
+				throw new ResourceException(
+					"Could not add alpha channel to texture, error reading texture buffer");
+			}
 		}
 	}
 

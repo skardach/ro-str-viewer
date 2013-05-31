@@ -169,14 +169,14 @@ public class STRViewer extends JFrame {
 
 	private void start() {
 		// Choose STR
-		//File strFile = chooseFile();
-		File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/bs_refinefailed.str");
+		File strFile = chooseFile();
+		//File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/bs_refinefailed.str");
 		if(strFile != null) {
 			try {
 				// Read STR
 				ResourceManager rm =
 					new ResourceManager(
-						new SimpleTextureManager(strFile.getParent()));
+						new SimpleTextureManager(strFile.getParent(), false));
 				InputStream stream = new FileInputStream(strFile);
 				StrReader reader = new StrReader();
 				Str effect = reader.readFromStream(rm, stream);

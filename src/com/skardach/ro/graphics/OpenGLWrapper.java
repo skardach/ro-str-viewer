@@ -31,6 +31,9 @@ public class OpenGLWrapper {
 	GLProfile _profile;
 	FPSAnimator _animator;
 	GLU _glu;
+	// Shader related ids
+	private int _pinkRemoverShaderId = 0;
+	private int _shaderProgramId = 0;
 
 	LinkedList<RendererHandler> _registeredRenderers =
 		new LinkedList<RendererHandler>();
@@ -90,7 +93,9 @@ public class OpenGLWrapper {
 				_centerX,
 				_centerY,
 				_centerZ);
+			gl.glUseProgram(0);
 			drawAxis(drawable);
+			gl.glUseProgram(_shaderProgramId);
 		}
 
 		@Override
@@ -289,6 +294,10 @@ public class OpenGLWrapper {
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		gl.glClearColor(0.2f, 0.2f, 0.2f, 1f);
 		gl.glClearDepth(1.0f);
+		// Remove old shaders if exist
+		destroyPinkRemoverShaderProgram(gl);
+		// add new shader
+		createPinkRemoverShaderProgram(gl);
 	}
 
 	/**
@@ -296,6 +305,68 @@ public class OpenGLWrapper {
 	 * rendering code for particular renderers, this should not be required.
 	 */
 	private void finalizeOpenGL(GLAutoDrawable ioCanvas) {
+		GL2 gl = ioCanvas.getGL().getGL2();
+		destroyPinkRemoverShaderProgram(gl);
+	}
+
+	/**
+	 * Adds a pink color remover shader and sets up _pinkRemoverShaderId and
+	 * _shaderProgramId fields to hold OpenGL ids for shader and shader program
+	 * respectively. Those will be needed for cleanup and occasional shader
+	 * enabling/disabling capability.
+	 *
+	 * @param ioGLContext
+	 *            OpenGL context.
+	 */
+	private void createPinkRemoverShaderProgram(GL2 ioGLContext) {
+		int shaderId = 0, programId = 0;
+		try {
+			// Load the code
+			String shaderCode = new String(
+					IOUtil.copyStream2ByteArray(OpenGLWrapper.class
+							.getResourceAsStream("/com/skardach/ro/graphics/shaders/pink_remover.glsl")));
+			// Create and compile the shader in OpenGL
+			shaderId = ioGLContext.glCreateShader(GL2.GL_FRAGMENT_SHADER);
+			if (shaderId == 0)
+				return;
+			ioGLContext.glShaderSource(shaderId, 1,
+					new String[] { shaderCode },
+					new int[] { shaderCode.length() }, 0);
+			ioGLContext.glCompileShader(shaderId);
+			// Create a shader program
+			programId = ioGLContext.glCreateProgram();
+			if (programId == 0) {
+				destroyPinkRemoverShaderProgram(ioGLContext);
+				return;
+			}
+			ioGLContext.glAttachShader(programId, shaderId);
+			ioGLContext.glLinkProgram(programId);
+			ioGLContext.glValidateProgram(programId);
+			ioGLContext.glUseProgram(programId);
+			_pinkRemoverShaderId = shaderId;
+			_shaderProgramId = programId;
+		} catch (IOException e) {
+			System.err.println("Could not load shader. Reason: "
+					+ e.getLocalizedMessage());
+			if (shaderId != 0)
+				destroyPinkRemoverShaderProgram(ioGLContext);
+		}
+		return;
+	}
+	/**
+	 * Deletes the pink color remover shader program and clears the
+	 * _pinkRemoverShaderId and _shaderProgramId fields to default values.
+	 * @param ioGLContext OpenGL context
+	 */
+	private void destroyPinkRemoverShaderProgram(GL2 ioGLContext) {
+		if (_pinkRemoverShaderId != 0) {
+			ioGLContext.glDeleteShader(_pinkRemoverShaderId);
+			_pinkRemoverShaderId = 0;
+		}
+		if (_shaderProgramId != 0) {
+			ioGLContext.glDeleteProgram(_shaderProgramId);
+			_pinkRemoverShaderId = 0;
+		}
 	}
 
 	/**
