@@ -170,7 +170,7 @@ public class STRViewer extends JFrame {
 	private void start() {
 		// Choose STR
 		//File strFile = chooseFile();
-		File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/stormgust.str");
+		File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/bs_refinefailed.str");
 		if(strFile != null) {
 			try {
 				// Read STR

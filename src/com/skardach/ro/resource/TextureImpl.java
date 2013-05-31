@@ -99,6 +99,13 @@ public class TextureImpl implements Texture {
 				byte pixel[] = new byte[4];
 				try {
 					old.get(pixel, 0, 3);
+					// normalize rgb parts
+					float r = (0xFF & pixel[0])/255f;
+					float g = (0xFF & pixel[1])/255f;
+					float b = (0xFF & pixel[2])/255f;
+					// get magenta color (pink)
+					float k = 1f - Math.max(Math.max(r, g), b);
+					float m = (1-g-k)/(1-k);
 					if(pixel[0] == -1
 						&& pixel[1] == 0
 						&& pixel[2] == -1) { // pink on first pixel so convert
@@ -107,13 +114,19 @@ public class TextureImpl implements Texture {
 								_data.getWidth()
 								* _data.getHeight() // number of pixels
 								* 4); // and 4 components per pixel (RGBA/BGRA)
+						pixel[3] = 0;
 						converted.put(pixel);
 						while(old.position() < old.capacity()) {
 							old.get(pixel, 0, 3);
-							if(pixel[0] == -1 // if pink then alpha 0
-								&& pixel[1] == 0
-								&& pixel[2] == -1) {
-								pixel[3] = 0;
+							// normalize rgb parts
+							r = (0xFF & pixel[0])/255f;
+							g = (0xFF & pixel[1])/255f;
+							b = (0xFF & pixel[2])/255f;
+							// get magenta color (pink)
+							k = 1f - Math.max(Math.max(r, g), b);
+							m = (1-g-k)/(1-k);
+							if(m > 0.7) {
+								pixel[3] = (byte) (-1*(1-m+0.1));
 							} else { // max alpha otherwise
 								pixel[3] = -1;
 							}
