@@ -100,11 +100,7 @@ public class SimpleStrRenderer implements Renderer {
 		_xRotation = iXRotation;
 		_yRotation = iYRotation;
 		_zRotation = iZRotation;
-		// FIXME: -iXScale prevents mirror image when looking from +z axis
-		// I think that effect files are described as a reflection or should
-		// be viewed from -z axis... Not sure, to be checked when integrated to
-		// ro client.
-		_xScale = -iXScale;
+		_xScale = iXScale;
 		_yScale = iYScale;
 		_zScale = iZScale;
 	}
@@ -138,9 +134,9 @@ public class SimpleStrRenderer implements Renderer {
 			_renderPosition._x,
 			_renderPosition._y,
 			_renderPosition._z);
-		iGL.glRotatef(-_xRotation, 1, 0, 0);
-		iGL.glRotatef(-_zRotation, 0, 0, 1);
-		iGL.glRotatef(-_yRotation, 0, 1, 0);
+		iGL.glRotatef(_xRotation, 1, 0, 0);
+		iGL.glRotatef(_zRotation, 0, 0, 1);
+		iGL.glRotatef(_yRotation, 0, 1, 0);
 		iGL.glScalef(_xScale, _yScale, _zScale);
 		iGL.glEnable(GL.GL_TEXTURE_2D);
 	}
@@ -254,7 +250,6 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glPushMatrix();
 
 				Billboard(iGL);
-
 				iGL.glColor4ub(
 					(byte)finalColor._r,
 					(byte)finalColor._g,
@@ -263,7 +258,7 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glTranslatef(
 					finalPosition._x,
 					finalPosition._y,
-					-0.5f);
+					0f);
 				iGL.glRotatef(finalRotation.getObject(), 0, 0, 1);
 
 				iGL.glBlendFunc(
@@ -271,9 +266,6 @@ public class SimpleStrRenderer implements Renderer {
 						baseFrame.get_destBlend().toGLValue());
 
 				iGL.glEnable(GL.GL_BLEND);
-				iGL.glAlphaFunc(GL.GL_GREATER, 0.5f);
-				iGL.glEnable(GL2.GL_ALPHA_TEST);
-				iGL.glEnable(GL.GL_TEXTURE_2D);
 
 				if(!texture.isLoaded())
 					try {
@@ -288,7 +280,6 @@ public class SimpleStrRenderer implements Renderer {
 				texture.bind(iGL);
 
 				iGL.glColorMask(true, true, true, false);
-
 				iGL.glBegin(GL2.GL_QUADS);
 				iGL.glTexCoord2f(
 					finalTextureMapping._d._x,
@@ -324,8 +315,6 @@ public class SimpleStrRenderer implements Renderer {
 				iGL.glEnd();
 
 				iGL.glColorMask(true, true, true, true);
-				iGL.glDisable(GL2.GL_ALPHA_TEST);
-				iGL.glDisable(GL.GL_TEXTURE_2D);
 				iGL.glDisable(GL.GL_BLEND);
 				iGL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 				iGL.glColor4f(

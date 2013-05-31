@@ -31,9 +31,6 @@ public class OpenGLWrapper {
 	GLProfile _profile;
 	FPSAnimator _animator;
 	GLU _glu;
-	// Shader related ids
-	private int _pinkRemoverShaderId = 0;
-	private int _shaderProgramId = 0;
 
 	LinkedList<RendererHandler> _registeredRenderers =
 		new LinkedList<RendererHandler>();
@@ -55,10 +52,10 @@ public class OpenGLWrapper {
 	 */
 	private class CanvasEventHandler implements GLEventListener, KeyListener {
 		int _eyeX = 0;
-		int _eyeY = -100;
+		int _eyeY = 100;
 		int _eyeZ = 600;
 		int _centerX = 0;
-		int _centerY = -100;
+		int _centerY = 100;
 		int _centerZ = 0;
 
 		@Override
@@ -80,13 +77,20 @@ public class OpenGLWrapper {
 		public void display(GLAutoDrawable drawable) {
 			GL2 gl = drawable.getGL().getGL2();
 			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-			setPerspective(drawable, Settings.PERSPECTIVE_ANGLE,
-					Settings.CLIPPING_NEAR, Settings.CLIPPING_FAR,
-					drawable.getWidth(), drawable.getHeight(), _eyeX, _eyeY,
-					_eyeZ, _centerX, _centerY, _centerZ);
-			gl.glUseProgram(0);
+			setPerspective(
+				drawable,
+				Settings.PERSPECTIVE_ANGLE,
+				Settings.CLIPPING_NEAR,
+				Settings.CLIPPING_FAR,
+				drawable.getWidth(),
+				drawable.getHeight(),
+				_eyeX,
+				_eyeY,
+				_eyeZ,
+				_centerX,
+				_centerY,
+				_centerZ);
 			drawAxis(drawable);
-			gl.glUseProgram(_shaderProgramId);
 		}
 
 		@Override
@@ -97,12 +101,12 @@ public class OpenGLWrapper {
 		public void keyPressed(KeyEvent e) {
 			switch (e.getKeyCode()) {
 			case (KeyEvent.VK_W):
-				_eyeY -= 10;
-				_centerY -= 10;
-				break;
-			case (KeyEvent.VK_S):
 				_eyeY += 10;
 				_centerY += 10;
+				break;
+			case (KeyEvent.VK_S):
+				_eyeY -= 10;
+				_centerY -= 10;
 				break;
 			case (KeyEvent.VK_A):
 				_eyeX -= 10;
@@ -214,7 +218,7 @@ public class OpenGLWrapper {
 		float ratio = (float) iWidth / (float) iHeight;
 		_glu.gluPerspective(iAngle, ratio, iClipNear, oClipFar);
 		_glu.gluLookAt(iEyeX, iEyeY, iEyeZ, iCenterX, iCenterY, iCenterZ, 0,
-				-1, 0);
+				1, 0);
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
 	}
@@ -269,6 +273,8 @@ public class OpenGLWrapper {
 	/**
 	 * Initialize OpenGL in Canvas. Required for STRViewer. If reusing rendering
 	 * code for particular renderers, this should not be required.
+	 * It is important to enable depth buffer, otherwise texture blending will
+	 * not work.
 	 */
 	private void initOpenGLInCanvas(GLAutoDrawable ioCanvas) {
 		_glu = new GLU();
@@ -276,15 +282,13 @@ public class OpenGLWrapper {
 		ioCanvas.setGL(new DebugGL2(gl));
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		gl.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
+		gl.glEnable(GL.GL_DEPTH_TEST);
+		gl.glDepthFunc(GL.GL_LEQUAL);
+		gl.glDepthMask(true);
 		gl.glEnable(GL.GL_TEXTURE_2D);
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		gl.glClearColor(0.2f, 0.2f, 0.2f, 1f);
 		gl.glClearDepth(1.0f);
-		gl.glEnable(GL.GL_DEPTH_TEST);
-		// Remove old shaders if exist
-		destroyPinkRemoverShaderProgram(gl);
-		// add new shader
-		createPinkRemoverShaderProgram(gl);
 	}
 
 	/**
@@ -292,68 +296,6 @@ public class OpenGLWrapper {
 	 * rendering code for particular renderers, this should not be required.
 	 */
 	private void finalizeOpenGL(GLAutoDrawable ioCanvas) {
-		GL2 gl = ioCanvas.getGL().getGL2();
-		destroyPinkRemoverShaderProgram(gl);
-	}
-
-	/**
-	 * Adds a pink color remover shader and sets up _pinkRemoverShaderId and
-	 * _shaderProgramId fields to hold OpenGL ids for shader and shader program
-	 * respectively. Those will be needed for cleanup and occasional shader
-	 * enabling/disabling capability.
-	 *
-	 * @param ioGLContext
-	 *            OpenGL context.
-	 */
-	private void createPinkRemoverShaderProgram(GL2 ioGLContext) {
-		int shaderId = 0, programId = 0;
-		try {
-			// Load the code
-			String shaderCode = new String(
-					IOUtil.copyStream2ByteArray(OpenGLWrapper.class
-							.getResourceAsStream("/com/skardach/ro/graphics/shaders/pink_remover.glsl")));
-			// Create and compile the shader in OpenGL
-			shaderId = ioGLContext.glCreateShader(GL2.GL_FRAGMENT_SHADER);
-			if (shaderId == 0)
-				return;
-			ioGLContext.glShaderSource(shaderId, 1,
-					new String[] { shaderCode },
-					new int[] { shaderCode.length() }, 0);
-			ioGLContext.glCompileShader(shaderId);
-			// Create a shader program
-			programId = ioGLContext.glCreateProgram();
-			if (programId == 0) {
-				destroyPinkRemoverShaderProgram(ioGLContext);
-				return;
-			}
-			ioGLContext.glAttachShader(programId, shaderId);
-			ioGLContext.glLinkProgram(programId);
-			ioGLContext.glValidateProgram(programId);
-			ioGLContext.glUseProgram(programId);
-			_pinkRemoverShaderId = shaderId;
-			_shaderProgramId = programId;
-		} catch (IOException e) {
-			System.err.println("Could not load shader. Reason: "
-					+ e.getLocalizedMessage());
-			if (shaderId != 0)
-				destroyPinkRemoverShaderProgram(ioGLContext);
-		}
-		return;
-	}
-	/**
-	 * Deletes the pink color remover shader program and clears the
-	 * _pinkRemoverShaderId and _shaderProgramId fields to default values.
-	 * @param ioGLContext OpenGL context
-	 */
-	private void destroyPinkRemoverShaderProgram(GL2 ioGLContext) {
-		if (_pinkRemoverShaderId != 0) {
-			ioGLContext.glDeleteShader(_pinkRemoverShaderId);
-			_pinkRemoverShaderId = 0;
-		}
-		if (_shaderProgramId != 0) {
-			ioGLContext.glDeleteProgram(_shaderProgramId);
-			_pinkRemoverShaderId = 0;
-		}
 	}
 
 	/**
@@ -411,17 +353,17 @@ public class OpenGLWrapper {
 		gl.glLineWidth(1f);
 		gl.glColor3d(255, 0, 0);
 		gl.glBegin(GL.GL_LINES);
-		gl.glVertex3i(-100, 0, 0);
+		gl.glVertex3i(0, 0, 0);
 		gl.glVertex3i(100, 0, 0);
 		gl.glEnd();
 		gl.glColor3d(0, 255, 0);
 		gl.glBegin(GL.GL_LINES);
-		gl.glVertex3i(0, -100, 0);
+		gl.glVertex3i(0, 0, 0);
 		gl.glVertex3i(0, 100, 0);
 		gl.glEnd();
 		gl.glColor3d(0, 0, 255);
 		gl.glBegin(GL.GL_LINES);
-		gl.glVertex3i(0, 0, -100);
+		gl.glVertex3i(0, 0, 0);
 		gl.glVertex3i(0, 0, 100);
 		gl.glEnd();
 		// restore environment

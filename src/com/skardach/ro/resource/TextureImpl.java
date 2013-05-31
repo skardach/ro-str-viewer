@@ -1,17 +1,17 @@
-package com.skardach.ro.graphics;
+package com.skardach.ro.resource;
 
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.Buffer;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
-import com.skardach.ro.resource.ResourceException;
-import com.skardach.ro.resource.Texture;
 /**
  * Class describing a texture. Uses JOGL TextureIO toolkit to make things
  * easier.
@@ -89,6 +89,57 @@ public class TextureImpl implements Texture {
 				extension);
 			if(_data == null)
 				throw new ResourceException("Could not read texture " + _name);
+			int pixelType = _data.getPixelType();
+			int pixelFormat = _data.getPixelFormat();
+			if((pixelFormat == GL.GL_RGB // only support conversion from RGB
+					|| pixelFormat == GL2.GL_BGR) // and BGR format now
+				&& pixelType == GL.GL_UNSIGNED_BYTE
+				&& _data.getBuffer() instanceof ByteBuffer) {
+				ByteBuffer old = (ByteBuffer) _data.getBuffer();
+				byte pixel[] = new byte[4];
+				try {
+					old.get(pixel, 0, 3);
+					if(pixel[0] == -1
+						&& pixel[1] == 0
+						&& pixel[2] == -1) { // pink on first pixel so convert
+						ByteBuffer converted =
+							ByteBuffer.allocate(
+								_data.getWidth()
+								* _data.getHeight() // number of pixels
+								* 4); // and 4 components per pixel (RGBA/BGRA)
+						converted.put(pixel);
+						while(old.position() < old.capacity()) {
+							old.get(pixel, 0, 3);
+							if(pixel[0] == -1 // if pink then alpha 0
+								&& pixel[1] == 0
+								&& pixel[2] == -1) {
+								pixel[3] = 0;
+							} else { // max alpha otherwise
+								pixel[3] = -1;
+							}
+							converted.put(pixel);
+						}
+						converted.rewind();
+						_data = new TextureData(
+							_data.getGLProfile(),
+							4,
+							_data.getWidth(),
+							_data.getHeight(),
+							_data.getBorder(),
+							pixelFormat == GL.GL_RGB ? GL.GL_RGBA : GL2.GL_BGRA,
+							_data.getPixelType(),
+							_data.getMipmap(),
+							_data.isDataCompressed(),
+							_data.getMustFlipVertically(),
+							converted, null);
+					} else {
+						old.rewind();
+					}
+				} catch(BufferUnderflowException e) {
+					throw new ResourceException(
+						"Could not add alpha channel to texture, error reading texture buffer");
+				}
+			}
 			// create the texture
 			_joglTexture = TextureIO.newTexture(_data);
 			// set some parameters

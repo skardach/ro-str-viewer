@@ -22,7 +22,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import com.jogamp.opengl.util.FPSAnimator;
 import com.skardach.ro.graphics.OpenGLWrapper;
 import com.skardach.ro.graphics.Point3D;
 import com.skardach.ro.graphics.RenderException;
@@ -30,10 +29,10 @@ import com.skardach.ro.graphics.Renderer;
 import com.skardach.ro.graphics.STRRendererFactory;
 import com.skardach.ro.resource.ResourceException;
 import com.skardach.ro.resource.ResourceManager;
+import com.skardach.ro.resource.SimpleTextureManager;
 import com.skardach.ro.resource.str.Str;
 import com.skardach.ro.resource.str.StrReader;
 import com.skardach.ro.resource.str.StrReader.ParseException;
-import com.skardach.ro.resource.str.test.SimpleTextureManager;
 
 /**
  * Opens *.str file and tries to render it.
@@ -51,11 +50,11 @@ public class STRViewer extends JFrame {
 		public static final Point3D EFFECT_POSITION = new Point3D(0, 0, 0);
 		public static final float EFFECT_ROTATION_X = 0f;
 		public static final float EFFECT_ROTATION_Y = 0f;
-		public static final float EFFECT_ROTATION_Z = 0f;
+		public static final float EFFECT_ROTATION_Z = 180f;
 		public static final float EFFECT_SCALE_X = 1f;
 		public static final float EFFECT_SCALE_Y = 1f;
 		public static final float EFFECT_SCALE_Z = 1f;
-		public static final int FPS = FPSAnimator.DEFAULT_FRAMES_PER_INTERVAL;
+		public static final int FPS = 60;
 	}
 	// OpenGL settings wrapper
 	OpenGLWrapper _glWrapper;
@@ -170,8 +169,8 @@ public class STRViewer extends JFrame {
 
 	private void start() {
 		// Choose STR
-		File strFile = chooseFile();
-		//File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/aspersio.str");
+		//File strFile = chooseFile();
+		File strFile = new File("/media/data/workspace/ro/strs/data/texture/effect/stormgust.str");
 		if(strFile != null) {
 			try {
 				// Read STR

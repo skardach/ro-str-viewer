@@ -1,10 +1,7 @@
-package com.skardach.ro.resource.str.test;
+package com.skardach.ro.resource;
 
 import java.util.HashMap;
 
-import com.skardach.ro.graphics.TextureImpl;
-import com.skardach.ro.resource.Texture;
-import com.skardach.ro.resource.TextureManager;
 /**
  * Simple implementation of texture manager. It only maintains a map of
  * textures indexed by their pathname. It uses {@link TextureImpl} class for
