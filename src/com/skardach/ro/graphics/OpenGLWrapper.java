@@ -270,10 +270,10 @@ public class OpenGLWrapper {
 	}
 	/**
 	 * Global initialisation of OpenGL. Calls
-	 * {@link GLProfile#initSingleton(boolean)}.
+	 * {@link GLProfile#initSingleton()}.
 	 */
 	public static void initOpenGL() {
-		GLProfile.initSingleton(true);
+		GLProfile.initSingleton();
 	}
 	/**
 	 * Initialize OpenGL in Canvas. Required for STRViewer. If reusing rendering
